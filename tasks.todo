@@ -1,9 +1,9 @@
 Title:
  An analysis of cumulus clouds based on fractal geometry.
 
-Projects:
+Project:
  Consider processes as shown in Crum Stull & Eloranta 1987: 
-   “Coincident lidar and aircraft observations of entrainment into thermals and mixed layers” (JAS).
+ “Coincident lidar and aircraft observations of entrainment into thermals and mixed layers” (JAS).
 
  ☐ Compute the fractal dimension of the contorted perimeter of a thermal, and compare it with the fractal dimension of a simple circle.
 
@@ -15,8 +15,8 @@ Projects:
    ☐ Based on your computer model, is there some radius r where r < R, such that essentially no entrained air is found inside a circle of radius r? If so, do you anticipate that this radius r would decrease with height inside the thermal, while R increases with height?
 
  ☐ Regarding Stull & Eloranta 1985 NWD, consider their findings that lidar-observed cloud base is almost exactly equal to the theoretical LCL height. But this theoretical LCL height assumes undiluted air in the thermal. Namely, there is no entrainment into a protected core of the thermal.
- ☐ Discuss how your model from question (2) gives results that are consistent with the findings of Stull and Eloranta, or,
- ☐ If your results are not consistent, either (i) change your model in question (2), or (ii) explain and justify why your model is reasonable even though it does not agree with observations.
+   ☐ Discuss how your model from question (2) gives results that are consistent with the findings of Stull and Eloranta, or,
+   ☐ If your results are not consistent, either (i) change your model in question (2), or (ii) explain and justify why your model is reasonable even though it does not agree with observations.
 
  ☐ Consider the observations of entrainment into the top of the mixed layer (as given by many of the other readings that I assigned), and how probability distributions (e.g., LCL zone and Entrainment zone EZ) can be found as a function of height.  
    ☐ Use that same concept of probability distributions to describe air entrained laterally into a thermal or cumulus cloud, and thermal air detrained into the environment.
@@ -25,5 +25,7 @@ Projects:
  ☐ Describe how your conceptual and computer models from steps 1-4 above relate (or don’t relate) to the entrainment models of Austin and you. @due(18-02-22 15:00)
 
  Tasks:
-   ☐ Finish writing the box counting algorithm for a sample coarse @started(18-02-15 15:35) @due(18-02-16 15:35)
-   ☐ Using the same algorithm, plot coarse observations
+   Fractional dimension analysis:
+     ☐ Finish writing the box counting algorithm for a sample coarse @started(18-02-15 15:35) @due(18-02-17 23:59)
+     ☐ Using the same algorithm, plot coarse observations
+     ☐ Analyze f_dim as a function as cloud perimeter 

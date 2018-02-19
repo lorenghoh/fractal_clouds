@@ -13,7 +13,7 @@ from pick_cloud_projection import pick_cid
 if __name__ == '__main__':
     # Calculate fdim from a sample cloud 
     # Read horizontal slice from a cloud core
-    xy_map, x, y = pick_cid(6886, 4)
+    xy_map, x, y = pick_cid(6886, 0)
 
     x_width = max(x) - min(x)
     y_width = max(y) - min(y)
@@ -51,7 +51,7 @@ if __name__ == '__main__':
     xi = np.arange(max(x_sub)+1)
     yi = np.arange(max(y_sub)+1)
 
-    im = plt.contour(xi, yi, xy_map_sub, cmap=cmap, lw=0.5)
+    im = plt.pcolormesh(xi, yi, xy_map_sub, cmap=cmap, lw=0.5)
 
     plt.tight_layout(pad=0.5)
     figfile = 'png/{}.png'.format(os.path.splitext(__file__)[0])
