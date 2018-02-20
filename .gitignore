@@ -1,7 +1,8 @@
+# Workspace folders
 npy/
 plots/
 png/
-tracking
+tracking/
 
 # Binary data files
 *.nc
