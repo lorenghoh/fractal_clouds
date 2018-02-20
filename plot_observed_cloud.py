@@ -22,12 +22,10 @@ if __name__ == '__main__':
           f"({min(y)}, {max(y)}), ({min(x)}, {max(x)})")
 
     # Map the projection onto a new 2D array (+4 padding)
-    xy_map_sub = np.zeros((y_width+1+4, x_width+1+4), dtype=int)
-    x_sub = x - min(x) + 2
-    y_sub = y - min(y) + 2
+    xy_map_sub = np.zeros((y_width+4, x_width+4), dtype=int)
+    x_sub = x - min(x) + 1
+    y_sub = y - min(y) + 1
     xy_map_sub[y_sub, x_sub] = 1
-
-    print(xy_map_sub.shape)
 
     #---- Plotting 
     fig = plt.figure(1, figsize=(3, 3))
@@ -48,8 +46,8 @@ if __name__ == '__main__':
                                  light=1, rot=-1.05, as_cmap=True)
 
     ax = plt.subplot(1, 1, 1)
-    xi = np.arange(x_width+1+4)
-    yi = np.arange(y_width+1+4)
+    xi = np.arange(x_width+4)
+    yi = np.arange(y_width+4)
 
     im = plt.pcolormesh(xi, yi, xy_map_sub, cmap=cmap, lw=0.5)
 
