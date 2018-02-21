@@ -4,20 +4,23 @@ import pandas as pd
 import pyarrow.parquet as pq 
 
 def pick_cid(cid, ctype):
-    path = '/nodessd/loh/temp'
-    df = pq.read_table(f'{path}/clouds.pq', nthreads=6).to_pandas()
+    path = '/nodessd/loh/repos/tracking_parq'
+    df = pq.read_table(f'{path}/clouds_00000121.pq', nthreads=6).to_pandas()
     df = df[(df.cid == cid) & (df.type == ctype)]
 
     # Calculate z index from coordinates
     df['z'] = df.coord // (256 * 256)
 
-    k_sample = df.z.value_counts().index[0]
-    df = df[(df.z == k_sample)]
+    # k_sample = df.z.value_counts().index[0]
+    # df = df[(df.z == k_sample)]
 
     # From there, take the xy indices
     xy = df.coord % (256 * 256)
     df['y'] = xy // 256 
     df['x'] = xy % 256
+
+    # Drop duplicates 
+    df = df.drop_duplicates(subset=['y', 'x'], keep='first')
 
     x = df.x.values
     y = df.y.values
