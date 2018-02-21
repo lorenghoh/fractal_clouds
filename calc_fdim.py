@@ -21,7 +21,7 @@ def count_box(Z, k):
 if __name__ == '__main__':
     # Calculate fdim from a sample cloud 
     # Read horizontal slice from a cloud core
-    xy_map, x, y = pick_cid(11023, 0)
+    xy_map, x, y = pick_cid(4563, 0)
 
     x_width = max(x) - min(x)
     y_width = max(y) - min(y)
@@ -30,9 +30,9 @@ if __name__ == '__main__':
           f"({min(y)}, {max(y)}), ({min(x)}, {max(x)})")
 
     # Map the projection onto a new 2D array (2x size)
-    xy_map_sub = np.zeros((y_width*3, x_width*3), dtype=int)
-    x_sub = x - min(x) + x_width // 2
-    y_sub = y - min(y) + y_width // 2
+    xy_map_sub = np.zeros((y_width+4, x_width+4), dtype=int)
+    x_sub = x - min(x) + 1
+    y_sub = y - min(y) + 1
     xy_map_sub[y_sub, x_sub] = 1
 
     # Leave only the perimeter of the cloud 
@@ -52,8 +52,7 @@ if __name__ == '__main__':
     n = int(np.log(n)/np.log(2))
 
     # Build successive box sizes (from 2**n down to 2**1)
-    sizes = 2**np.arange(n, 1, -1)
-    # sizes = np.arange(p, 1, -1)
+    sizes = 2**np.arange(n, 0, -1)
 
     # Actual box counting with decreasing size
     counts = []
@@ -61,8 +60,8 @@ if __name__ == '__main__':
         counts.append(count_box(xy_map_sub, size))
     
     # Fit the successive log(sizes) with log (counts)
-    coeffs = np.polyfit(np.log(sizes), np.log(counts), 1)
-    print(-coeffs[0])
+    c = np.polyfit(np.log(sizes), np.log(counts), 1)
+    print(-c[0])
 
     #---- Plotting 
     fig = plt.figure(1, figsize=(3, 3))
@@ -83,8 +82,12 @@ if __name__ == '__main__':
                                  light=1, rot=-1.05, as_cmap=True)
 
     ax = plt.subplot(1, 1, 1)
+    plt.xlabel(r'$\log_{10}$ $\epsilon$')
+    plt.ylabel(r'$\log_{10}$ N($\epsilon$)')
 
-    plt.plot(np.log(sizes), np.log(counts), '-o')
+    plt.plot(np.log(sizes), np.log(counts), marker='o', lw=0.75)
+    xi = np.linspace(0.5, 4, 50)
+    plt.plot(xi, c[0]*xi+c[1], 'k-', lw=0.9)
 
     plt.tight_layout(pad=0.5)
     figfile = 'png/{}.png'.format(os.path.splitext(__file__)[0])
