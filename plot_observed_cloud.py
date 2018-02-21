@@ -13,7 +13,7 @@ from pick_cloud_projection import pick_cid
 if __name__ == '__main__':
     # Calculate fdim from a sample cloud 
     # Read horizontal slice from a cloud core
-    xy_map, x, y = pick_cid(7425, 4)
+    xy_map, x, y = pick_cid(4563, 0)
 
     x_width = max(x) - min(x)
     y_width = max(y) - min(y)
@@ -28,7 +28,7 @@ if __name__ == '__main__':
     xy_map_sub[y_sub, x_sub] = 1
 
     #---- Plotting 
-    fig = plt.figure(1, figsize=(3, 3))
+    fig = plt.figure(1, figsize=(5, 4))
     fig.clf()
     sns.set_context('paper')
     sns.set_style('ticks', 
