@@ -13,7 +13,7 @@ from pick_cloud_projection import pick_cid
 if __name__ == '__main__':
     # Calculate fdim from a sample cloud 
     # Read horizontal slice from a cloud core
-    xy_map, x, y = pick_cid(7425, 4)
+    xy_map, x, y = pick_cid(4563, 0)
 
     x_width = max(x) - min(x)
     y_width = max(y) - min(y)
@@ -34,10 +34,11 @@ if __name__ == '__main__':
             + np.roll(xy_map_sub, -1, axis=0) \
             + np.roll(xy_map_sub, 1, axis=1) \
             + np.roll(xy_map_sub, -1, axis=1)
-    xy_map_sub[xy_temp >= 4] = 0
+    xy_map_per = np.array(xy_map_sub, copy=True)
+    xy_map_per[xy_temp >= 4] = 0
 
     #---- Plotting 
-    fig = plt.figure(1, figsize=(3, 3))
+    fig = plt.figure(1, figsize=(4, 6))
     fig.clf()
     sns.set_context('paper')
     sns.set_style('ticks', 
@@ -54,11 +55,14 @@ if __name__ == '__main__':
     cmap = sns.cubehelix_palette(start=1.2, hue=1, \
                                  light=1, rot=-1.05, as_cmap=True)
 
-    ax = plt.subplot(1, 1, 1)
+    ax = plt.subplot(2, 1, 1)
+
     xi = np.arange(x_width+4)
     yi = np.arange(y_width+4)
-
     im = plt.pcolormesh(xi, yi, xy_map_sub, cmap=cmap, lw=0.5)
+
+    ax = plt.subplot(2, 1, 2)
+    im = plt.pcolormesh(xi, yi, xy_map_per, cmap=cmap, lw=0.5)
 
     plt.tight_layout(pad=0.5)
     figfile = 'png/{}.png'.format(os.path.splitext(__file__)[0])
