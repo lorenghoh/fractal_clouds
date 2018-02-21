@@ -42,17 +42,11 @@ if __name__ == '__main__':
             + np.roll(xy_map_sub, -1, axis=1)
     xy_map_sub[xy_temp == 4] = 0
 
-    # Minimal dimension of image
-    p = min(xy_map_sub.shape)
-
-    # Greatest power of 2 less than or equal to p
-    n = 2**np.floor(np.log(p)/np.log(2))
-
-    # Extract the exponent
-    n = int(np.log(n)/np.log(2))
-
     # Build successive box sizes (from 2**n down to 2**1)
-    sizes = 2**np.arange(n, 0, -1)
+    p = min(xy_map_sub.shape)
+    n = 2**np.floor(np.log(p)/np.log(2))
+    n = int(np.log(n)/np.log(2))
+    sizes = 2**np.arange(n, 1, -1)
 
     # Actual box counting with decreasing size
     counts = []
