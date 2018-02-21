@@ -5,12 +5,13 @@ Project:
  Consider processes as shown in Crum Stull & Eloranta 1987: 
  “Coincident lidar and aircraft observations of entrainment into thermals and mixed layers” (JAS).
 
- ☐ Compute the fractal dimension of the contorted perimeter of a thermal, and compare it with the fractal dimension of a simple circle.
+ ✓ Compute the fractal dimension of the contorted perimeter of a thermal, and compare it with the fractal dimension of a simple circle. @done (18-02-20 01:12)
 
  ☐ Assume that the aircraft and lidar could see only the larger size lobes and entrained blobs; and assume that the actual contorted shape is fractal-like with similar shaped contortions of ever-smaller spatial scales that exist in the real thermal, but which the lidar and aircraft cannot resolve.
-   ☐ Write or adapt a simple computer program to draw/plot the contorted shape of the thermal that includes the superposition of all the scales of contortion, from the scale of the diameter R of the whole thermal down to some smaller turbulence scale L that you set as a parameter. But try to make your model be consistent with the measurements reported by Crum et al.
+   ✓ Write or adapt a simple computer program to draw/plot the contorted shape of the thermal that includes the superposition of all the scales of contortion, from the scale of the diameter R of the whole thermal down to some smaller turbulence scale L that you set as a parameter. But try to make your model be consistent with the measurements reported by Crum et al. @done (18-02-21 00:56)
    ☐ Use your computer program to calculate and plot the fractal dimension as a function of L/R.
-   ☐ Use your computer program to calculate the length P of the perimeter of the contorted shape as a function of L/R. Also find the relationship between P and fractal dimension, if any. 
+   @started(18-02-21 01:10)
+   ☐ Use your computer program to calculate the length P of the perimeter of the contorted shape as a function of L/R. Also find the relationship between P and fractal dimension, if any. @started(18-02-21 01:10)
    ☐ Define some intermediate scale S such that  L < S < R. Further suppose that all scales of contortion smaller than S represent “shell” air (the cylindrical shell around the outside of the thermal that contains a mixture of thermal and environmental air), while all scales of contortion greater than S represent the contorted boundary between thermal air and environmental air.  Describe and plot how the relative amount of entrained air varies with S?
    ☐ Based on your computer model, is there some radius r where r < R, such that essentially no entrained air is found inside a circle of radius r? If so, do you anticipate that this radius r would decrease with height inside the thermal, while R increases with height?
 
@@ -26,6 +27,9 @@ Project:
 
  Tasks:
    Fractional dimension analysis:
-     ☐ Finish writing the box counting algorithm for a sample coarse @started(18-02-15 15:35) @due(18-02-17 23:59)
-     ☐ Using the same algorithm, plot coarse observations
-     ☐ Analyze f_dim as a function as cloud perimeter 
+     ✓ Finish writing the box counting algorithm for a sample coarse @started(18-02-15 15:35) @due(18-02-17 23:59) @done (18-02-20 01:13) @lasted(4 days, 9:38)
+     ✓ Using the same algorithm, plot coarse observations @done (18-02-21 00:56)
+     @started(18-02-20 01:13)
+     ✓ Analyze f_dim as a function as cloud perimeter @done (18-02-21 01:10)
+     ☐ Repeat perimeter calculation over a range of L
+     @started(18-02-21 01:13) @due(18-02-22 15:00)
