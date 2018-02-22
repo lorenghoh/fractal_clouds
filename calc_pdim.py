@@ -26,10 +26,11 @@ if __name__ == '__main__':
     x = x - min(x) + 1
     y = y - min(y) + 1
     Z[y, x] = 1
+    Z[Z > 0] = 1
 
     # Calculate perimeter and area
     area = np.sum(Z[Z > 0])
     p = np.sum(Z[:, 1:] != Z[:, :-1]) + np.sum(Z[1:, :] != Z[:-1, :])
 
     print(p * 25, area * 25*25)
-    print("Dp =", np.log10(p*25)/np.log10(area*25*25))
+    print("Dp =", 2*np.log10(p*25)/np.log10(area*25*25))
