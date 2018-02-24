@@ -5,11 +5,11 @@ import pyarrow.parquet as pq
 
 from pick_cloud_projection import pick_cid 
 
-def calculate_com():
+def calculate_com(df):
     pass
 
 def calculate_geometric_r(df):
-    return np.sqrt()
+    return np.sqrt(df.shape[0])
 
 def calculate_radial_r():
     pass
