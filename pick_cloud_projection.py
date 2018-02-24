@@ -44,10 +44,7 @@ def pick_cid(cid, ctype):
     print( "Adjusted coordinates: " \
           f"({min(y)}, {max(y)}), ({min(x)}, {max(x)})")
 
-    # Map the projection onto a new 2D array (2x size)
-    xy_map = np.zeros((y_width+4, x_width+4), dtype=int)
     x_sub = x - min(x) + 1
     y_sub = y - min(y) + 1
-    xy_map[y_sub, x_sub] = 1
 
-    return xy_map, pd.DataFrame({'x':x, 'y':y})
+    return pd.DataFrame({'x':x_sub, 'y':y_sub})
