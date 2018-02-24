@@ -50,6 +50,9 @@ if __name__ == '__main__':
     y_sub = y - min(y) + 1
     Z[y_sub, x_sub] = 1
 
+    # Unmodified observed cloud field
+    Z_base = np.copy(Z)
+
     Z = np.add.reduceat(
         np.add.reduceat(Z, np.arange(0, Z.shape[0], 3), axis=0),
                            np.arange(0, Z.shape[1], 3), axis=1)
