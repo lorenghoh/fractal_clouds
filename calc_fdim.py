@@ -18,32 +18,21 @@ def count_box(Z, k):
     # We count non-empty (0) and non-full boxes (k*k)
     return len(np.where((S > 0) & (S < k*k))[0])
 
-if __name__ == '__main__':
-    # Calculate fdim from a sample cloud 
-    # Read horizontal slice from a cloud core
-    xy_map, x, y = pick_cid(4563, 0)
-
-    x_width = max(x) - min(x)
-    y_width = max(y) - min(y)
-    print(f"\nCorresponding sub-domain size: {y_width}x{x_width}")
-    print( "Adjusted coordinates: " \
-          f"({min(y)}, {max(y)}), ({min(x)}, {max(x)})")
-
-    # Map the projection onto a new 2D array (2x size)
-    xy_map_sub = np.zeros((y_width+4, x_width+4), dtype=int)
-    x_sub = x - min(x) + 1
-    y_sub = y - min(y) + 1
-    xy_map_sub[y_sub, x_sub] = 1
+def calculate_fdim(df):
+    x_width = max(df.x) - min(df.x)
+    y_width = max(df.y) - min(df.y)
+    xy_map = np.zeros((y_width+4, x_width+4), dtype=int)
+    xy_map[df.y, df.x] = 1
 
     # Leave only the perimeter of the cloud 
-    xy_temp = np.roll(xy_map_sub, 1, axis=0) \
-            + np.roll(xy_map_sub, -1, axis=0) \
-            + np.roll(xy_map_sub, 1, axis=1) \
-            + np.roll(xy_map_sub, -1, axis=1)
-    xy_map_sub[xy_temp == 4] = 0
+    xy_temp = np.roll(xy_map, 1, axis=0) \
+            + np.roll(xy_map, -1, axis=0) \
+            + np.roll(xy_map, 1, axis=1) \
+            + np.roll(xy_map, -1, axis=1)
+    xy_map[xy_temp == 4] = 0
 
     # Build successive box sizes (from 2**n down to 2**1)
-    p = min(xy_map_sub.shape)
+    p = min(xy_map.shape)
     n = 2**np.floor(np.log(p)/np.log(2))
     n = int(np.log(n)/np.log(2))
     sizes = 2**np.arange(n, 1, -1)
@@ -51,11 +40,20 @@ if __name__ == '__main__':
     # Actual box counting with decreasing size
     counts = []
     for size in sizes:
-        counts.append(count_box(xy_map_sub, size))
+        counts.append(count_box(xy_map, size))
     
     # Fit the successive log(sizes) with log (counts)
     c = np.polyfit(np.log(sizes), np.log(counts), 1)
     print(-c[0])
+
+    return c, sizes, counts
+
+if __name__ == '__main__':
+    # Calculate fdim from a sample cloud 
+    # Read cloud core projection image
+    df = pick_cid(4563, 0)
+
+    c, sizes, counts = calculate_fdim(df)
 
     #---- Plotting 
     fig = plt.figure(1, figsize=(3, 3))
