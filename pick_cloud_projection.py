@@ -27,7 +27,7 @@ def pick_cid(cid, ctype):
 
     print(df_.head())
 
-    x_axis, y_axis = xy_map.shape
+    x_axis, y_axis = 256, 256
     if (max(x) - min(x)) > x_axis // 2:
         # Shift x-coordinates
         x = x + x_off
@@ -38,4 +38,16 @@ def pick_cid(cid, ctype):
         y = y + y_off
         y[y >= y_axis] = y[y >= y_axis] - y_axis
 
-    return df, x, y
+    x_width = max(x) - min(x)
+    y_width = max(y) - min(y)
+    print(f"\nCorresponding sub-domain size: {y_width}x{x_width}")
+    print( "Adjusted coordinates: " \
+          f"({min(y)}, {max(y)}), ({min(x)}, {max(x)})")
+
+    # Map the projection onto a new 2D array (2x size)
+    xy_map = np.zeros((y_width+4, x_width+4), dtype=int)
+    x_sub = x - min(x) + 1
+    y_sub = y - min(y) + 1
+    xy_map[y_sub, x_sub] = 1
+
+    return xy_map, pd.DataFrame({'x':x, 'y':y})
