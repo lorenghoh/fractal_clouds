@@ -29,11 +29,15 @@ def pick_cid(cid, ctype):
 
     x_axis, y_axis = 256, 256
     if (max(x) - min(x)) > x_axis // 2:
+        x_off = x_axis - np.min(x[(x > x_axis // 2)])
+        
         # Shift x-coordinates
         x = x + x_off
         x[x >= x_axis] = x[x >= x_axis] - x_axis
 
     if (max(y) - min(y)) > y_axis // 2:
+        y_off = y_axis - np.min(y[(y > y_axis // 2)])
+
         # Shift y-coordinates
         y = y + y_off
         y[y >= y_axis] = y[y >= y_axis] - y_axis
