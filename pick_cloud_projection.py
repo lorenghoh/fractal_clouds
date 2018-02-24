@@ -20,35 +20,22 @@ def pick_cid(cid, ctype):
     df['x'] = xy % 256
 
     # Drop duplicates 
-    df = df.drop_duplicates(subset=['y', 'x'], keep='first')
+    df_ = df.drop_duplicates(subset=['y', 'x'], keep='first')
 
-    x = df.x.values
-    y = df.y.values
+    x = df_.x.values
+    y = df_.y.values
 
-    print(df.head())
-
-    # Map cloud core onto the BOMEX domain and adjust
-    xy_map = np.zeros((256, 256), dtype=int)
-    xy_map[y, x] = 1
+    print(df_.head())
 
     x_axis, y_axis = xy_map.shape
     if (max(x) - min(x)) > x_axis // 2:
-        # Shift target array
-        x_off = x_axis - min(x[(x > x_axis // 2)])
-        xy_map = np.roll(xy_map, x_off, axis=1)
-
         # Shift x-coordinates
         x = x + x_off
         x[x >= x_axis] = x[x >= x_axis] - x_axis
 
     if (max(y) - min(y)) > y_axis // 2:
-        # Shift target array
-        y_off = y_axis - min(y[(y > y_axis // 2)])
-        xy_map = np.roll(xy_map, y_off, axis=0)
-        
         # Shift y-coordinates
         y = y + y_off
         y[y >= y_axis] = y[y >= y_axis] - y_axis
 
-    return xy_map, x, y
-
+    return df, x, y
