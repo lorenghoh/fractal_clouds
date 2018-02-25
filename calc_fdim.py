@@ -41,7 +41,7 @@ def calculate_fdim(df):
     # Scaling factor based on L/R
     r_g = calc_radius.calculate_radial_distance(df)
     r_d = calc_radius.calculate_geometric_r(df)
-    sizes = np.arange(int(r_g), 1, -1)
+    sizes = np.arange(int(r_d), 1, -1)
 
     # Actual box counting with decreasing size
     counts = []
@@ -67,11 +67,11 @@ if __name__ == '__main__':
     sns.set_context('paper')
     sns.set_style('ticks', 
         {
-            'axes.grid': True, 
+            'axes.grid': False, 
             'axes.linewidth': '0.75',
             'grid.color': '0.75',
             'grid.linestyle': u':',
-            'legend.frameon': True,
+            'legend.frameon': False,
         })
     plt.rc('text', usetex=True)
     plt.rc('font', family='Helvetica')
@@ -84,11 +84,14 @@ if __name__ == '__main__':
     plt.ylabel(r'$\log_{10}$ N($\epsilon$)')
 
     plt.plot(np.log(sizes), np.log(counts), marker='o', lw=0.75)
-    xi = np.linspace(0.5, 4, 50)
-    plt.plot(xi, c[0]*xi+c[1], 'k-', lw=0.9)
+    xi = np.linspace(0.5, 3, 50)
+    label = "$\mathcal{D}_\mathrm{box}$ = " + f"{-c[0]:.3f}"
+    plt.plot(xi, c[0]*xi+c[1], 'k-', lw=0.9, label=label)
+
+    plt.legend()
 
     plt.tight_layout(pad=0.5)
     figfile = 'png/{}.png'.format(os.path.splitext(__file__)[0])
     print('\t Writing figure to {}...'.format(figfile))
-    plt.savefig(figfile,bbox_inches='tight', dpi=180, \
+    plt.savefig(figfile,bbox_inches='tight', dpi=300, \
                 facecolor='w', transparent=True)
