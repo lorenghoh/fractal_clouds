@@ -74,12 +74,12 @@ def calculate_fdim(df):
 
 if __name__ == '__main__':
     path = '/nodessd/loh/repos/tracking_parq'
-    filelist = sorted(glob.glob(f'{path}/clouds_*.pq'))[::2]
+    filelist = sorted(glob.glob(f'{path}/clouds_*.pq'))
     df = pq.ParquetDataset(filelist).read(nthreads=6).to_pandas()
 
     # Take 30 largest cloud cores in the dataset
-    # largest_clouds = df.cid.value_counts()[:].index
-    # df = df[df.cid.isin(largest_clouds)]
+    largest_clouds = df.cid.value_counts()[:600].index
+    df = df[df.cid.isin(largest_clouds)]
     df = df[df.type == 0]
 
     # Translate indices to coordinates
@@ -88,13 +88,14 @@ if __name__ == '__main__':
     df['y'] = xy // 256 
     df['x'] = xy % 256
 
+    # Project the 3D cloud onto surface 
+    df_ = df.drop_duplicates(subset=['y', 'x'], keep='first')
+
     def calc_fdim_to_df(df):
         c, _, _ = calculate_fdim(df)
         return pd.Series({'fdim': -c[0]})
 
-    group = df.groupby(['cid', 'z'], as_index=False)
-    df = group.filter(lambda x: len(x) > 12)
-    group = df.groupby(['cid', 'z'], as_index=False)
+    group = df.groupby(['cid'], as_index=False)
     df_fdim = group.apply(calc_fdim_to_df)
 
     df_fdim = df_fdim[df_fdim.fdim > 0]
@@ -135,7 +136,7 @@ if __name__ == '__main__':
     box_text = "Count: {:,} \n".format(int(desc['count'])) \
                 + f"Mean: {mu_:.3f} \n " \
                 + f"Std: {sig_:.3f}"
-    ax.text(-0.1, 2.1, box_text, fontsize=10, va='top', 
+    ax.text(0, 3.6, box_text, fontsize=10, va='top', 
             bbox=dict(boxstyle='round, pad=0.5', fc='w'))
 
     plt.tight_layout(pad=0.5)

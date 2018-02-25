@@ -19,7 +19,7 @@ def pick_cid(cid, ctype):
     df['y'] = xy // 256 
     df['x'] = xy % 256
 
-    # Drop duplicates 
+    # Project the 3D cloud onto surface 
     df_ = df.drop_duplicates(subset=['y', 'x'], keep='first')
 
     x = df_.x.values
