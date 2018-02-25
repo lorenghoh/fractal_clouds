@@ -9,23 +9,17 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 from pick_cloud_projection import pick_cid 
+import calc_radius
 
 if __name__ == '__main__':
     # Calculate fdim from a sample cloud 
     # Read horizontal slice from a cloud core
-    xy_map, x, y = pick_cid(4563, 0)
+    df = pick_cid(4563, 0)
 
-    x_width = max(x) - min(x)
-    y_width = max(y) - min(y)
-    print(f"\nCorresponding sub-domain size: {y_width}x{x_width}")
-    print( "Adjusted coordinates: " \
-          f"({min(y)}, {max(y)}), ({min(x)}, {max(x)})")
-
-    # Map the projection onto a new 2D array (+4 padding)
-    xy_map_sub = np.zeros((y_width+4, x_width+4), dtype=int)
-    x_sub = x - min(x) + 1
-    y_sub = y - min(y) + 1
-    xy_map_sub[y_sub, x_sub] = 1
+    x_width = max(df.x) - min(df.x)
+    y_width = max(df.y) - min(df.y)
+    xy_map = np.zeros((y_width+4, x_width+4), dtype=int)
+    xy_map[df.y, df.x] = 1
 
     #---- Plotting 
     fig = plt.figure(1, figsize=(5, 4))
@@ -49,7 +43,26 @@ if __name__ == '__main__':
     xi = np.arange(x_width+4)
     yi = np.arange(y_width+4)
 
-    im = plt.pcolormesh(xi, yi, xy_map_sub, cmap=cmap, lw=0.5)
+    x_com, y_com = calc_radius.calculate_com(df)
+    r_g = calc_radius.calculate_radial_distance(df)
+    r_d = calc_radius.calculate_geometric_r(df)
+
+    C1 = sns.crayons['Mahogany']
+    C2 = sns.crayons['Denim']
+    c1 = plt.Circle((x_com, y_com), r_g, color=C1, fill=False, lw=1.25)
+    c2 = plt.Circle((x_com, y_com), r_d, color=C2, fill=False, lw=2)
+    ax.add_artist(c1)
+    ax.add_artist(c2)
+
+    plt.plot([x_com, x_com+r_g*np.sqrt(2)/2], \
+             [y_com, y_com+r_g/np.sqrt(2)], color=C1, \
+             lw=1.25, label=f"$r_g$ $\sim$ {r_g*25:.0f} m")
+    plt.plot([x_com, x_com-r_d*np.sqrt(2)/2], 
+             [y_com, y_com+r_d/np.sqrt(2)], color=C2, \
+             lw=2, label=f"$r_d$ $\sim$ {r_d*25:.0f} m")
+    plt.legend(fontsize=10, loc=2)
+
+    im = plt.pcolormesh(xi, yi, xy_map, cmap=cmap, lw=0.5)
 
     plt.tight_layout(pad=0.5)
     figfile = 'png/{}.png'.format(os.path.splitext(__file__)[0])
