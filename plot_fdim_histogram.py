@@ -102,7 +102,7 @@ if __name__ == '__main__':
     print(desc) # Print statistics
 
     #---- Plotting 
-    fig = plt.figure(1, figsize=(5, 3))
+    fig = plt.figure(1, figsize=(4.5, 3))
     fig.clf()
     sns.set_context('paper')
     sns.set_style('ticks', 
@@ -124,11 +124,18 @@ if __name__ == '__main__':
                                  light=1, rot=-1.05, as_cmap=True)
     sns.distplot(df_fdim, ax=ax, bins=20)
 
+    # Normal distribution given histogram statistics
+    xi = np.linspace(0, 2.2, 100)
+    mu_ = desc['mean']
+    sig_ = desc['std']
+    plt.plot(xi, (2 * np.pi * sig_**2)**(-0.5) * \
+             np.exp(-(xi - mu_)**2 / (2 * sig_**2)))
+
     # Text box with distribution specs
-    box_text = f"Count: {int(desc['count'])} \n" \
-                + f"Mean: {desc['mean']:.3f} \n " \
-                + f"Std: {desc['std']:.3f}"
-    ax.text(0.1, 2, box_text, fontsize=10, va='top', 
+    box_text = "Count: {:,} \n".format(int(desc['count'])) \
+                + f"Mean: {mu_:.3f} \n " \
+                + f"Std: {sig_:.3f}"
+    ax.text(-0.1, 2.1, box_text, fontsize=10, va='top', 
             bbox=dict(boxstyle='round, pad=0.5', fc='w'))
 
     plt.tight_layout(pad=0.5)
