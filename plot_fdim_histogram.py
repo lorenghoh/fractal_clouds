@@ -72,8 +72,6 @@ def calculate_fdim(df):
         except:
             return [0, 0], 0, 0
 
-    
-
 if __name__ == '__main__':
     path = '/nodessd/loh/repos/tracking_parq'
     filelist = sorted(glob.glob(f'{path}/clouds_*.pq'))[::2]
@@ -100,7 +98,8 @@ if __name__ == '__main__':
     df_fdim = group.apply(calc_fdim_to_df)
 
     df_fdim = df_fdim[df_fdim.fdim > 0]
-    print(df_fdim.describe())
+    desc = df_fdim.describe().squeeze()
+    print(desc) # Print statistics
 
     #---- Plotting 
     fig = plt.figure(1, figsize=(5, 3))
@@ -108,7 +107,7 @@ if __name__ == '__main__':
     sns.set_context('paper')
     sns.set_style('ticks', 
         {
-            'axes.grid': True, 
+            'axes.grid': False, 
             'axes.linewidth': '0.75',
             'grid.color': '0.75',
             'grid.linestyle': u':',
@@ -124,6 +123,13 @@ if __name__ == '__main__':
     cmap = sns.cubehelix_palette(start=1.2, hue=1, \
                                  light=1, rot=-1.05, as_cmap=True)
     sns.distplot(df_fdim, ax=ax, bins=20)
+
+    # Text box with distribution specs
+    box_text = f"Count: {int(desc['count'])} \n" \
+                + f"Mean: {desc['mean']:.3f} \n " \
+                + f"Std: {desc['std']:.3f}"
+    ax.text(0.1, 2, box_text, fontsize=10, va='top', 
+            bbox=dict(boxstyle='round, pad=0.5', fc='w'))
 
     plt.tight_layout(pad=0.5)
     figfile = 'png/{}.png'.format(os.path.splitext(__file__)[0])
