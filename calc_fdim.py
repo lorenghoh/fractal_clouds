@@ -8,7 +8,8 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-from pick_cloud_projection import pick_cid 
+from pick_cloud_projection import pick_cid
+import calc_radius
 
 def count_box(Z, k):
     S = np.add.reduceat(
@@ -32,10 +33,15 @@ def calculate_fdim(df):
     xy_map[xy_temp == 4] = 0
 
     # Build successive box sizes (from 2**n down to 2**1)
-    p = min(xy_map.shape)
-    n = 2**np.floor(np.log(p)/np.log(2))
-    n = int(np.log(n)/np.log(2))
-    sizes = 2**np.arange(n, 1, -1)
+    # p = min(xy_map.shape)
+    # n = 2**np.floor(np.log(p)/np.log(2))
+    # n = int(np.log(n)/np.log(2))
+    # sizes = 2**np.arange(n, 1, -1)
+
+    # Scaling factor based on L/R
+    r_g = calc_radius.calculate_radial_distance(df)
+    r_d = calc_radius.calculate_geometric_r(df)
+    sizes = np.arange(int(r_g), 1, -1)
 
     # Actual box counting with decreasing size
     counts = []
