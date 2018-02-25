@@ -136,7 +136,7 @@ if __name__ == '__main__':
     box_text = "Count: {:,} \n".format(int(desc['count'])) \
                 + f"Mean: {mu_:.3f} \n " \
                 + f"Std: {sig_:.3f}"
-    ax.text(0, 3.6, box_text, fontsize=10, va='top', 
+    ax.text(0, 3.5, box_text, fontsize=10, va='top', 
             bbox=dict(boxstyle='round, pad=0.5', fc='w'))
 
     plt.tight_layout(pad=0.5)
