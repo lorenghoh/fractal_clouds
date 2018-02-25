@@ -10,7 +10,7 @@ def calculate_com(df):
     return df.x.mean(), df.y.mean()
 
 def calculate_geometric_r(df):
-    return np.sqrt(df.shape[0])
+    return np.sqrt(df.shape[0]/np.pi)
 
 def calculate_radial_distance(df):
     x_com, y_com = calculate_com(df)
@@ -25,6 +25,9 @@ if __name__ == '__main__':
     # Read horizontal slice from a cloud core
     df = pick_cid(4563, 0)
 
+    # Print COM
+    print(calculate_com(df))
+
     # Geometric radius
     r_g = calculate_geometric_r(df)
 
@@ -33,4 +36,3 @@ if __name__ == '__main__':
 
     print(r_g)
     print(r_d)
-    
