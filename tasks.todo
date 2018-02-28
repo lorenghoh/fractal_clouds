@@ -7,13 +7,13 @@ Project:
 
  ✓ Compute the fractal dimension of the contorted perimeter of a thermal, and compare it with the fractal dimension of a simple circle. @done (18-02-20 01:12)
 
- ☐ Assume that the aircraft and lidar could see only the larger size lobes and entrained blobs; and assume that the actual contorted shape is fractal-like with similar shaped contortions of ever-smaller spatial scales that exist in the real thermal, but which the lidar and aircraft cannot resolve.
-   ✓ Write or adapt a simple computer program to draw/plot the contorted shape of the thermal that includes the superposition of all the scales of contortion, **from the scale of the diameter R of the whole thermal down to some smaller turbulence scale L** that you set as a parameter. But try to make your model be consistent with the measurements reported by Crum et al. @done (18-02-21 00:56)
+ ✓ Assume that the aircraft and lidar could see only the larger size lobes and entrained blobs; and assume that the actual contorted shape is fractal-like with similar shaped contortions of ever-smaller spatial scales that exist in the real thermal, but which the lidar and aircraft cannot resolve. @done (18-02-28 15:33)
+   ✓ Write or adapt a simple computer program to draw/plot the contorted shape of the thermal that includes the superposition of all the scales of contortion, from the scale of the diameter R of the whole thermal down to some smaller turbulence scale L that you set as a parameter. But try to make your model be consistent with the measurements reported by Crum et al. @done (18-02-21 00:56)
    ✓ Use your computer program to calculate and plot the fractal dimension as a function of L/R. @started(18-02-21 01:10) @done (18-02-26 16:32) @lasted(5 days, 15:22)
-   ☐ Use your computer program to calculate the length P of the perimeter of the contorted shape as a function of L/R. 
+   ✓ Use your computer program to calculate the length P of the perimeter of the contorted shape as a function of L/R. @done (18-02-27 16:03)
    ✓ Also find the relationship between P and fractal dimension, if any. @started(18-02-21 01:10) @done (18-02-21 01:19)
-   ☐ Define some intermediate scale S such that  L < S < R. Further suppose that all scales of contortion smaller than S represent “shell” air (the cylindrical shell around the outside of the thermal that contains a mixture of thermal and environmental air), while all scales of contortion greater than S represent the contorted boundary between thermal air and environmental air.  Describe and plot how the relative amount of entrained air varies with S?
-   ☐ Based on your computer model, is there some radius r where r < R, such that essentially no entrained air is found inside a circle of radius r? If so, do you anticipate that this radius r would decrease with height inside the thermal, while R increases with height?
+   ✓ Define some intermediate scale S such that  L < S < R. Further suppose that all scales of contortion smaller than S represent “shell” air (the cylindrical shell around the outside of the thermal that contains a mixture of thermal and environmental air), while all scales of contortion greater than S represent the contorted boundary between thermal air and environmental air.  Describe and plot how the relative amount of entrained air varies with S? @started(18-02-27 12:00) @done (18-02-28 14:50) @lasted(1 day, 2:50)
+   ✓ Based on your computer model, is there some radius r where r < R, such that essentially no entrained air is found inside a circle of radius r? If so, do you anticipate that this radius r would decrease with height inside the thermal, while R increases with height? @started(18-02-27 17:48) @done (18-02-28 15:32) @lasted(21:44)
 
  ☐ Regarding Stull & Eloranta 1985 NWD, consider their findings that lidar-observed cloud base is almost exactly equal to the theoretical LCL height. But this theoretical LCL height assumes undiluted air in the thermal. Namely, there is no entrainment into a protected core of the thermal.
    ☐ Discuss how your model from question (2) gives results that are consistent with the findings of Stull and Eloranta, or,
@@ -23,7 +23,7 @@ Project:
    ☐ Use that same concept of probability distributions to describe air entrained laterally into a thermal or cumulus cloud, and thermal air detrained into the environment.
    ☐ Discuss how this conceptual model might or might not be different for lateral entrainment into cumulus clouds.
 
- ☐ Describe how your conceptual and computer models from steps 1-4 above relate (or don’t relate) to the entrainment models of Austin and you. @due(18-02-22 15:00)
+ ☐ Describe how your conceptual and computer models from steps 1-4 above relate (or don’t relate) to the entrainment models of Austin and you.
 
  Tasks:
    Fractional dimension analysis:
