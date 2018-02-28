@@ -48,6 +48,7 @@ def calculate_fdim(df):
     for size in sizes:
         counts.append(count_box(xy_map, size))
     
+    sizes = sizes / r_d
     # Fit the successive log(sizes) with log (counts)
     c = np.polyfit(np.log(sizes), np.log(counts), 1)
     print(-c[0])
@@ -80,11 +81,11 @@ if __name__ == '__main__':
                                  light=1, rot=-1.05, as_cmap=True)
 
     ax = plt.subplot(1, 1, 1)
-    plt.xlabel(r'$\log_{10}$ $\epsilon$')
-    plt.ylabel(r'$\log_{10}$ N($\epsilon$)')
+    plt.xlabel(r'$\log_{10}$ $\eta$')
+    plt.ylabel(r'$\log_{10}$ N($\eta$)')
 
     plt.plot(np.log(sizes), np.log(counts), marker='o', lw=0.75)
-    xi = np.linspace(0.5, 3, 50)
+    xi = np.linspace(-2.25, 0.2, 50)
     label = "$\mathcal{D}_\mathrm{box}$ = " + f"{-c[0]:.3f}"
     plt.plot(xi, c[0]*xi+c[1], 'k-', lw=0.9, label=label)
 
