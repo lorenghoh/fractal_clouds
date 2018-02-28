@@ -35,11 +35,33 @@ if __name__ == '__main__':
     y_width = max(df.y) - min(df.y)
     xy_map = np.zeros((y_width+4, x_width+4), dtype=int)
     xy_map[df.y, df.x] = 1
-    xy_map = observe_coarse_field(xy_map, 6)
+
+    # Scaling factor based on L/R
+    r_g = calc_radius.calculate_radial_distance(df)
+    r_d = calc_radius.calculate_geometric_r(df)
+    sizes = np.arange(int(r_g), 0, -1)
+
+    Dp = []
+    for size in sizes:
+        # Coefficient for horizontal scale
+        C = 25 * size
+
+        Z = observe_coarse_field(xy_map, size)
+        area = np.sum(Z) * C**2
+        p = calc_perimeter(Z) * C
+
+        Dp.append(p)
+    sizes = sizes 
+
+    print(sizes, Dp)
+
+    # Fit the successive log(sizes) with log (counts)
+    c = np.polyfit(np.log(sizes), np.log(Dp), 1)
+    print(-c[0])
 
     # Calculate perimeter and area
-    area = np.sum(xy_map[xy_map > 0])
-    p = calc_perimeter(xy_map)
+    area = np.sum(xy_map[xy_map > 0]) * 25**2
+    p = calc_perimeter(xy_map) * 25
 
-    print(p * 25, area * 25*25)
-    print("Dp =", 2*np.log10(p*25)/np.log10(area*25*25))
+    print(p, area)
+    print("Dp =", 2*np.log10(p)/np.log10(area))
