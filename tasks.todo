@@ -9,7 +9,7 @@ Project:
 
  ☐ Assume that the aircraft and lidar could see only the larger size lobes and entrained blobs; and assume that the actual contorted shape is fractal-like with similar shaped contortions of ever-smaller spatial scales that exist in the real thermal, but which the lidar and aircraft cannot resolve.
    ✓ Write or adapt a simple computer program to draw/plot the contorted shape of the thermal that includes the superposition of all the scales of contortion, **from the scale of the diameter R of the whole thermal down to some smaller turbulence scale L** that you set as a parameter. But try to make your model be consistent with the measurements reported by Crum et al. @done (18-02-21 00:56)
-   ☐ Use your computer program to calculate and plot the fractal dimension as a function of L/R. @started(18-02-21 01:10)
+   ✓ Use your computer program to calculate and plot the fractal dimension as a function of L/R. @started(18-02-21 01:10) @done (18-02-26 16:32) @lasted(5 days, 15:22)
    ☐ Use your computer program to calculate the length P of the perimeter of the contorted shape as a function of L/R. 
    ✓ Also find the relationship between P and fractal dimension, if any. @started(18-02-21 01:10) @done (18-02-21 01:19)
    ☐ Define some intermediate scale S such that  L < S < R. Further suppose that all scales of contortion smaller than S represent “shell” air (the cylindrical shell around the outside of the thermal that contains a mixture of thermal and environmental air), while all scales of contortion greater than S represent the contorted boundary between thermal air and environmental air.  Describe and plot how the relative amount of entrained air varies with S?
@@ -30,7 +30,7 @@ Project:
      ✓ Finish writing the box counting algorithm for a sample coarse @started(18-02-15 15:35) @due(18-02-17 23:59) @done (18-02-20 01:13) @lasted(4 days, 9:38)
      ✓ Using the same algorithm, plot coarse observations @done (18-02-21 00:56)
      ✓ Analyze f_dim as a function as cloud perimeter @done (18-02-21 01:10)
-     ☐ Repeat perimeter calculation over a range of L @started(18-02-21 01:13) @due(18-02-22 15:00)
-     ☐ Further refactor calc_fdim.py and make the calculation callable
-     ☐ Calculate the (geometric/radial) radius of the observed cloud @started(18-02-21 16:18)
-     ☐ Come up with a proper expression of the scaling factor L/R
+     ✓ Repeat perimeter calculation over a range of L @started(18-02-21 01:13) @due(18-02-22 15:00) @done (18-02-26 17:33) @lasted(5 days, 16:20)
+     ✓ Further refactor calc_fdim.py and make the calculation callable @done (18-02-26 17:33)
+     ✓ Calculate the (geometric/radial) radius of the observed cloud @started(18-02-21 16:18) @done (18-02-26 17:33) @lasted(5 days, 1:15)
+     ✓ Come up with a proper expression of the scaling factor L/R @done (18-02-26 17:33)
