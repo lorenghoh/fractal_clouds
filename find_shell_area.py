@@ -25,7 +25,7 @@ def observe_coarse_field(Z, k):
     return S
 
 if __name__ == '__main__':
-    df = pick_cid(4563, 0)
+    df = pick_cid(4563, 4)
 
     x_width = max(df.x) - min(df.x)
     y_width = max(df.y) - min(df.y)
@@ -48,9 +48,11 @@ if __name__ == '__main__':
         Z = observe_coarse_field(xy_map, size)
         areas.append(np.array(area - np.sum(Z) * dxx**2)/area)
 
-    sizes = np.array(sizes)
-    # c = np.polyfit(sizes[:-1], areas[:-1], 1)
-    # print(c)
+    sizes = np.array(sizes)/r_g
+    m_ = (sizes > 0.4)
+    c1 = np.polyfit(sizes[m_], np.array(areas)[m_], 1)
+    c2 = np.polyfit(sizes[~m_], np.array(areas)[~m_], 1)
+    c2 = np.polyfit(sizes[~m_], np.array(areas)[~m_], 1)
 
     #---- Plotting 
     fig = plt.figure(1, figsize=(3, 3))
@@ -62,7 +64,7 @@ if __name__ == '__main__':
             'axes.linewidth': '0.75',
             'grid.color': '0.75',
             'grid.linestyle': u':',
-            'legend.frameon': False,
+            'legend.frameon': True,
         })
     plt.rc('text', usetex=True)
     plt.rc('font', family='Helvetica')
@@ -74,10 +76,14 @@ if __name__ == '__main__':
     plt.xlabel(r'$S$')
     plt.ylabel(r'$\mathcal{A}_\mathrm{s}/\mathcal{A}$')
 
-    # xi = np.linspace(min(sizes), max(sizes), 50)
-    # plt.plot(xi, c[0]*xi+c[1], 'k-', lw=0.9)
+    xi = np.linspace(min(sizes)-0.2, max(sizes)+0.2, 50)
+    plt.plot(xi, c1[0]*xi+c1[1], lw=0.9, label="S $>$ 0.4")
+    xi = np.linspace(min(sizes[~m_])-0.1, max(sizes[~m_])+0.1, 50)
+    plt.plot(xi, c2[0]*xi+c2[1], lw=0.9, label="S $\leq$ 0.4")
 
     plt.plot(sizes, areas, marker='o', lw=0.75)
+
+    plt.legend(loc=4)
 
     plt.tight_layout(pad=0.5)
     figfile = 'png/{}.png'.format(os.path.splitext(__file__)[0])
