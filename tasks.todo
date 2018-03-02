@@ -15,9 +15,8 @@ Project:
    ✓ Define some intermediate scale S such that  L < S < R. Further suppose that all scales of contortion smaller than S represent “shell” air (the cylindrical shell around the outside of the thermal that contains a mixture of thermal and environmental air), while all scales of contortion greater than S represent the contorted boundary between thermal air and environmental air.  Describe and plot how the relative amount of entrained air varies with S? @started(18-02-27 12:00) @done (18-02-28 14:50) @lasted(1 day, 2:50)
    ✓ Based on your computer model, is there some radius r where r < R, such that essentially no entrained air is found inside a circle of radius r? If so, do you anticipate that this radius r would decrease with height inside the thermal, while R increases with height? @started(18-02-27 17:48) @done (18-02-28 15:32) @lasted(21:44)
 
- ☐ Regarding Stull & Eloranta 1985 NWD, consider their findings that lidar-observed cloud base is almost exactly equal to the theoretical LCL height. But this theoretical LCL height assumes undiluted air in the thermal. Namely, there is no entrainment into a protected core of the thermal.
-   ☐ Discuss how your model from question (2) gives results that are consistent with the findings of Stull and Eloranta, or,
-   ☐ If your results are not consistent, either (i) change your model in question (2), or (ii) explain and justify why your model is reasonable even though it does not agree with observations.
+ ✓ Regarding Stull & Eloranta 1985 NWD, consider their findings that lidar-observed cloud base is almost exactly equal to the theoretical LCL height. But this theoretical LCL height assumes undiluted air in the thermal. Namely, there is no entrainment into a protected core of the thermal. @done (18-03-01 14:13)
+   ✓ Discuss how your model from question (2) gives results that are consistent with the findings of Stull and Eloranta, or, @done (18-03-01 14:13)
 
  ☐ Consider the observations of entrainment into the top of the mixed layer (as given by many of the other readings that I assigned), and how probability distributions (e.g., LCL zone and Entrainment zone EZ) can be found as a function of height.  
    ☐ Use that same concept of probability distributions to describe air entrained laterally into a thermal or cumulus cloud, and thermal air detrained into the environment.
@@ -34,3 +33,6 @@ Project:
      ✓ Further refactor calc_fdim.py and make the calculation callable @done (18-02-26 17:33)
      ✓ Calculate the (geometric/radial) radius of the observed cloud @started(18-02-21 16:18) @done (18-02-26 17:33) @lasted(5 days, 1:15)
      ✓ Come up with a proper expression of the scaling factor L/R @done (18-02-26 17:33)
+
+   Jupyter notebook:
+     ✓ Initialize Jupyter notebook on Github @done (18-02-28 15:40)
