@@ -24,9 +24,7 @@ def observe_coarse_field(Z, k):
     S[S >= thold] = 1
     return S
 
-if __name__ == '__main__':
-    df = pick_cid(4563, 4)
-
+def find_shell_area_fraction(df):
     x_width = max(df.x) - min(df.x)
     y_width = max(df.y) - min(df.y)
     xy_map = np.zeros((y_width+4, x_width+4), dtype=int)
@@ -49,9 +47,15 @@ if __name__ == '__main__':
         areas.append(np.array(area - np.sum(Z) * dxx**2)/area)
 
     sizes = np.array(sizes)/r_g
-    m_ = (sizes > 0.4)
+    return sizes, areas
+
+if __name__ == '__main__':
+    df = pick_cid(4261, 4)
+
+    sizes, areas = find_shell_area_fraction(df)
+
+    m_ = (sizes > 0.33)
     c1 = np.polyfit(sizes[m_], np.array(areas)[m_], 1)
-    c2 = np.polyfit(sizes[~m_], np.array(areas)[~m_], 1)
     c2 = np.polyfit(sizes[~m_], np.array(areas)[~m_], 1)
 
     #---- Plotting 
@@ -69,19 +73,20 @@ if __name__ == '__main__':
     plt.rc('text', usetex=True)
     plt.rc('font', family='Helvetica')
 
-    cmap = sns.cubehelix_palette(start=1.2, hue=1, \
-                                 light=1, rot=-1.05, as_cmap=True)
+    pal = sns.color_palette()
 
     ax = plt.subplot(1, 1, 1)
     plt.xlabel(r'$S$')
     plt.ylabel(r'$\mathcal{A}_\mathrm{s}/\mathcal{A}$')
 
-    xi = np.linspace(min(sizes)-0.2, max(sizes)+0.2, 50)
-    plt.plot(xi, c1[0]*xi+c1[1], lw=0.9, label="S $>$ 0.4")
-    xi = np.linspace(min(sizes[~m_])-0.1, max(sizes[~m_])+0.1, 50)
-    plt.plot(xi, c2[0]*xi+c2[1], lw=0.9, label="S $\leq$ 0.4")
+    plt.plot(sizes, areas, marker='o', c='k', lw=1.25)
 
-    plt.plot(sizes, areas, marker='o', lw=0.75)
+    xi = np.linspace(min(sizes)-0.2, max(sizes)+0.2, 50)
+    plt.plot(xi, c1[0]*xi+c1[1], '--', 
+             lw=0.75, c=pal[0], label="S $>$ 0.4")
+    xi = np.linspace(min(sizes[~m_])-0.1, max(sizes[~m_])+0.1, 50)
+    plt.plot(xi, c2[0]*xi+c2[1], '--', lw=0.75,
+             c=pal[1], label="S $\leq$ 0.4")
 
     plt.legend(loc=4)
 
