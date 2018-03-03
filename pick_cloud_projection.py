@@ -4,8 +4,7 @@ import pandas as pd
 import pyarrow.parquet as pq 
 
 def pick_cid(cid, ctype):
-    path = '/nodessd/loh/repos/tracking_parq'
-    df = pq.read_table(f'{path}/clouds_00000121.pq', nthreads=6).to_pandas()
+    df = pq.read_table(f'tracking/clouds_00000121.pq', nthreads=6).to_pandas()
     df = df[(df.cid == cid) & (df.type == ctype)]
 
     # Calculate z index from coordinates
