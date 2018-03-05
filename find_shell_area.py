@@ -11,6 +11,7 @@ import seaborn as sns
 from pick_cloud_projection import pick_cid 
 import calc_radius
 import calc_pdim
+import find_largest_clouds as find_lc
 
 # Given a field, return coarse observation
 def observe_coarse_field(Z, k):
@@ -50,16 +51,30 @@ def find_shell_area_fraction(df):
     return sizes, areas
 
 if __name__ == '__main__':
-    df = pick_cid(4261, 4)
+    sizes, areas = [], []
+    c1, c2 = [], []
 
-    sizes, areas = find_shell_area_fraction(df)
+    filename = 'tracking/clouds_00000121.pq'
+    lc = find_lc.find_largest_clouds(filename)
+    cids = lc.index
 
-    m_ = (sizes > 0.33)
-    c1 = np.polyfit(sizes[m_], np.array(areas)[m_], 1)
-    c2 = np.polyfit(sizes[~m_], np.array(areas)[~m_], 1)
+    max_index = 6
+    for i in range(max_index):
+        df = pick_cid(cids[i], 4)
+
+        s_, a_ = find_shell_area_fraction(df)
+        sizes.append(s_)
+        areas.append(a_)
+
+        m_ = (s_ > 0.33)
+        c_ = np.polyfit(s_[m_], np.array(a_)[m_], 1)
+        c1.append(c_)
+        c_ = np.polyfit(s_[~m_], np.array(a_)[~m_], 1)
+        c2.append(c_)
 
     #---- Plotting 
-    fig = plt.figure(1, figsize=(3, 3))
+    # fig = plt.figure(1, figsize=(10, 6))
+    fig = plt.figure(1, figsize=(8, 6))
     fig.clf()
     sns.set_context('paper')
     sns.set_style('ticks', 
@@ -75,20 +90,26 @@ if __name__ == '__main__':
 
     pal = sns.color_palette()
 
-    ax = plt.subplot(1, 1, 1)
-    plt.xlabel(r'$S$')
-    plt.ylabel(r'$\mathcal{A}_\mathrm{s}/\mathcal{A}$')
+    for i in range(max_index):
+        ax = plt.subplot(2, 3, i+1)
+        if i >= 3:
+            plt.xlabel(r'$S$')
 
-    plt.plot(sizes, areas, marker='o', c='k', lw=1.25)
+        if i in [0, 3]:
+            plt.ylabel(r'$\mathcal{A}_\mathrm{s}/\mathcal{A}$')
 
-    xi = np.linspace(min(sizes)-0.2, max(sizes)+0.2, 50)
-    plt.plot(xi, c1[0]*xi+c1[1], '--', 
-             lw=0.75, c=pal[0], label="S $>$ 0.4")
-    xi = np.linspace(min(sizes[~m_])-0.1, max(sizes[~m_])+0.1, 50)
-    plt.plot(xi, c2[0]*xi+c2[1], '--', lw=0.75,
-             c=pal[1], label="S $\leq$ 0.4")
+        plt.plot(sizes[i], areas[i], marker='o', c='k', lw=1.25)
 
-    plt.legend(loc=4)
+        m_ = (sizes[i] > 0.33)
+
+        xi = np.linspace(min(sizes[i])-0.2, max(sizes[i])+0.2, 50)
+        plt.plot(xi, c1[i][0]*xi+c1[i][1], '--', 
+                 lw=0.75, c=pal[0], label=f"S $>$ 0.4")
+        xi = np.linspace(min(sizes[i][~m_])-0.1, max(sizes[i][~m_])+0.1, 50)
+        plt.plot(xi, c2[i][0]*xi+c2[i][1], '--', lw=0.75,
+                 c=pal[1], label=f"S $\leq$ 0.4")
+
+        plt.legend(loc=4)
 
     plt.tight_layout(pad=0.5)
     figfile = 'png/{}.png'.format(os.path.splitext(__file__)[0])
