@@ -30,13 +30,13 @@ def write_parquet(time, file):
             rec['type'].append(keys[type])
             rec['coord'].append(index)
 
-    with h5py.File(file, libver='latest') as h5_file:
+    with h5py.File(file, 'r', libver='latest') as h5_file:
         for cid in h5_file.keys():
             if _i(cid) == -1: continue # Ignore noise
             h5_file[cid].visititems(append_items)
 
     df = pd.DataFrame.from_dict(rec)
-    loc = '/scratchSSD/loh/tracking/GCSSARM'
+    loc = '/scratchSSD/loh/tracking/CGILS_301K'
     pq.write_table(pa.Table.from_pandas(df), 
                    f'{loc}/clouds_{time:08d}.pq',
                    use_dictionary=True)
