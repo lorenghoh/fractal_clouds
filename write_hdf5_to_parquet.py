@@ -33,7 +33,7 @@ def write_parquet():
     for time, file in enumerate(filelist):
         rec = {'cid': [], 'type': [], 'coord': []}
 
-        with h5py.File(file, libver='latest') as h5_file:
+        with h5py.File(file, 'r', libver='latest') as h5_file:
             for cid in h5_file.keys():
                 if _i(cid) == -1: continue # Ignore noise
                 h5_file[cid].visititems(append_items)
