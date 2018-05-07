@@ -56,10 +56,10 @@ if __name__ == '__main__':
 
     plt.plot([x_com, x_com+r_g*np.sqrt(2)/2], \
              [y_com, y_com+r_g/np.sqrt(2)], color=C1, \
-             lw=1.25, label=f"$r_g$ $\sim$ {r_g*25:.0f} m")
+             lw=1.25, label=rf"$r_g$ $\sim$ {r_g*25:.0f} m")
     plt.plot([x_com, x_com-r_d*np.sqrt(2)/2], 
              [y_com, y_com+r_d/np.sqrt(2)], color=C2, \
-             lw=2, label=f"$r_d$ $\sim$ {r_d*25:.0f} m")
+             lw=2, label=rf"$r_d$ $\sim$ {r_d*25:.0f} m")
     plt.legend(fontsize=10, loc=2)
 
     im = plt.pcolormesh(xi, yi, xy_map, cmap=cmap, lw=0.5)
