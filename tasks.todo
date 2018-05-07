@@ -18,11 +18,11 @@ Project:
  ✓ Regarding Stull & Eloranta 1985 NWD, consider their findings that lidar-observed cloud base is almost exactly equal to the theoretical LCL height. But this theoretical LCL height assumes undiluted air in the thermal. Namely, there is no entrainment into a protected core of the thermal. @done (18-03-01 14:13)
    ✓ Discuss how your model from question (2) gives results that are consistent with the findings of Stull and Eloranta, or, @done (18-03-01 14:13)
 
- ☐ Consider the observations of entrainment into the top of the mixed layer (as given by many of the other readings that I assigned), and how probability distributions (e.g., LCL zone and Entrainment zone EZ) can be found as a function of height.  
-   ☐ Use that same concept of probability distributions to describe air entrained laterally into a thermal or cumulus cloud, and thermal air detrained into the environment.
-   ☐ Discuss how this conceptual model might or might not be different for lateral entrainment into cumulus clouds.
+ ✓ Consider the observations of entrainment into the top of the mixed layer (as given by many of the other readings that I assigned), and how probability distributions (e.g., LCL zone and Entrainment zone EZ) can be found as a function of height. @done (18-03-27 17:12)  
+   ✓ Use that same concept of probability distributions to describe air entrained laterally into a thermal or cumulus cloud, and thermal air detrained into the environment. @done (18-03-27 17:12)
+   ✓ Discuss how this conceptual model might or might not be different for lateral entrainment into cumulus clouds. @done (18-03-27 17:12)
 
- ☐ Describe how your conceptual and computer models from steps 1-4 above relate (or don’t relate) to the entrainment models of Austin and you.
+ ✓ Describe how your conceptual and computer models from steps 1-4 above relate (or don’t relate) to the entrainment models of Austin and you. @done (18-03-27 17:12)
 
  Tasks:
    Fractional dimension analysis:
