@@ -86,7 +86,7 @@ if __name__ == '__main__':
 
     plt.plot(np.log(sizes), np.log(counts), marker='o', lw=0.75)
     xi = np.linspace(-2.25, 0.2, 50)
-    label = "$\mathcal{D}_\mathrm{box}$ = " + f"{-c[0]:.3f}"
+    label = r"$\mathcal{D}_\mathrm{box}$ = " + f"{-c[0]:.3f}"
     plt.plot(xi, c[0]*xi+c[1], 'k-', lw=0.9, label=label)
 
     plt.legend()
