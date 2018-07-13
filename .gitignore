@@ -2,7 +2,6 @@
 npy/
 plots/
 png/
-tracking
 
 # Binary data files
 *.nc
