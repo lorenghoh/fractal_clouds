@@ -1,22 +1,21 @@
 import numpy as np
 import numba as nb
 import pandas as pd
-import pyarrow.parquet as pq 
+import pyarrow.parquet as pq
+
+from load_config import c, config
 
 def pick_cid(cid, ctype):
-    df = pq.read_table(f'tracking/clouds_00000121.pq', nthreads=6).to_pandas()
+    df = pq.read_table(f"{config['tracking']}/clouds_00000121.pq", nthreads=16).to_pandas()
     df = df[(df.cid == cid) & (df.type == ctype)]
 
     # Calculate z index from coordinates
-    df['z'] = df.coord // (256 * 256)
-
-    # k_sample = df.z.value_counts().index[0]
-    # df = df[(df.z == k_sample)]
+    df['z'] = df.coord // (c.nx * c.ny)
 
     # From there, take the xy indices
-    xy = df.coord % (256 * 256)
-    df['y'] = xy // 256 
-    df['x'] = xy % 256
+    xy = df.coord % (c.nx * c.ny)
+    df['y'] = xy // c.nx
+    df['x'] = xy % c.nx
 
     # Project the 3D cloud onto surface 
     df_ = df.drop_duplicates(subset=['y', 'x'], keep='first')
@@ -26,7 +25,7 @@ def pick_cid(cid, ctype):
 
     print(df_.head())
 
-    x_axis, y_axis = 256, 256
+    x_axis, y_axis = c.nx, c.ny
     if (max(x) - min(x)) > x_axis // 2:
         x_off = x_axis - np.min(x[(x > x_axis // 2)])
         
