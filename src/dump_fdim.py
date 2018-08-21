@@ -73,7 +73,6 @@ def calculate_fdim(df):
     
     # sizes = sizes / r_d
     # Fit the successive log(sizes) with log (counts)
-    # Fit the successive log(sizes) with log (counts)
     with warnings.catch_warnings():
         warnings.filterwarnings('error')
         try:
@@ -84,9 +83,9 @@ def calculate_fdim(df):
 
 if __name__ == '__main__':
     filelist = sorted(glob.glob(f"{config['tracking']}/clouds_*.pq"))
-    # filelist = sorted(glob.glob(f"../tracking/BOMEX/clouds_*.pq"))
 
-    # assert len(filelist) == c.nt    
+    # Assert dataset integrity
+    assert len(filelist) == c.nt
 
     for t, f in enumerate(filelist):
         print(f'\t {t}/{len(filelist)} ({t/len(filelist)*100:.1f} %)', end='\r')
