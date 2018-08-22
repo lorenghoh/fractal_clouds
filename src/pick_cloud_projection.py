@@ -18,9 +18,12 @@ def pick_cid(cid, ctype):
     df['y'] = xy // c.nx
     df['x'] = xy % c.nx
 
-    # Project the 3D cloud onto surface 
-    df_ = df.drop_duplicates(subset=['y', 'x'], keep='first')
+    # # Project the 3D cloud onto surface 
+    # df_ = df.drop_duplicates(subset=['y', 'x'], keep='first')
 
+    # Or, pick at the largest area
+    df_ = df[(df.z == df.z.value_counts().index[0])]
+    
     x = df_.x.values
     y = df_.y.values
 
