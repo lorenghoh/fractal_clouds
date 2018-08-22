@@ -11,5 +11,5 @@ def find_largest_clouds(filename):
 if __name__ == '__main__':
     filename = f'{config["tracking"]}/clouds_00000121.pq'
     counts = find_largest_clouds(filename)
-
-    counts[:30].to_json('largest_clouds.json', orient='records', lines=True)
+    
+    counts[:30].to_json('largest_clouds.json')
