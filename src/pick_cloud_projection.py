@@ -6,7 +6,8 @@ import pyarrow.parquet as pq
 from load_config import c, config
 
 def pick_cid(cid, ctype):
-    df = pq.read_table(f"{config['tracking']}/clouds_00000121.pq", nthreads=16).to_pandas()
+    pq_file = f"{config['tracking']}/clouds_00000121.pq"
+    df = pq.read_table(pq_file, nthreads=16).to_pandas()
     df = df[(df.cid == cid) & (df.type == ctype)]
 
     # Calculate z index from coordinates
