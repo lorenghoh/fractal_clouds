@@ -56,15 +56,15 @@ def calculate_fdim(df):
     xy_map[xy_temp == 4] = 0
 
     # Build successive box sizes (from 2**n down to 2**1)
-    p = min(xy_map.shape)
-    n = 2**np.floor(np.log(p)/np.log(2))
-    n = int(np.log(n)/np.log(2))
-    sizes = 2**np.arange(n, 1, -1)
+    # p = min(xy_map.shape)
+    # n = 2**np.floor(np.log(p)/np.log(2))
+    # n = int(np.log(n)/np.log(2))
+    # sizes = 2**np.arange(n, 1, -1)
 
     # Scaling factor based on L/R
     # r_g = calc_radius.calculate_radial_distance(df)
-    # r_d = calc_radius.calculate_geometric_r(df)
-    # sizes = np.arange(int(r_d), 1, -1)
+    r_d = calc_radius.calculate_geometric_r(df)
+    sizes = np.arange(int(r_d), 1, -1)
 
     # Actual box counting with decreasing size
     counts = []
@@ -111,8 +111,6 @@ if __name__ == '__main__':
         def calc_fdim_to_df(df):
             c, _, _ = calculate_fdim(df[-1])
             c = -c[0]
-            if (c <= 1) | (c >= 2):
-                return
             return pd.DataFrame({'fdim': [c]})
 
         group = df.groupby(['cid', 'z'], as_index=False)
