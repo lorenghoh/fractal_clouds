@@ -33,7 +33,7 @@ def build_subdomain(df):
 
     x_width = max(x) - min(x)
     y_width = max(y) - min(y)
-    xy_map = np.zeros((y_width+4, x_width+4), dtype=int)
+    xy_map = np.zeros((y_width+8, x_width+8), dtype=int)
     xy_map[y - min(y), x - min(x)] = 1
 
     return xy_map
@@ -61,8 +61,6 @@ def calculate_fdim(df):
     # r_ = calc_radius.calculate_radial_distance(df)
     r_ = calc_radius.calculate_geometric_r(df)
     sizes = np.arange(int(r_), 1, -1)
-    if len(sizes) <= 2:
-        return 0
 
     # Actual box counting with decreasing size
     counts = []
@@ -90,9 +88,9 @@ def calculate_pdim(df):
                             np.arange(0, Z.shape[1], k), axis=1)
 
         # Normalize coarse observation
-        threshold = k**2 * 0.5
-        S[S < threshold] = 0
-        S[S >= threshold] = 1
+        threshold = k**2 * 0.95
+        S[S <= threshold] = 0
+        S[S > threshold] = 1
         return S
 
     # Given a field, calculate perimeter
@@ -104,8 +102,6 @@ def calculate_pdim(df):
     # r_ = calc_radius.calculate_radial_distance(df)
     r_ = calc_radius.calculate_geometric_r(df)
     sizes = np.arange(int(r_), 0, -1)
-    if len(sizes) <= 2:
-        return 0
 
     # Calculate perimeter and area
     area = np.sum(xy_map[xy_map > 0]) * c.dx**2
@@ -156,7 +152,7 @@ if __name__ == '__main__':
         df = df[df.type == 0]
     
         grp = df.groupby(['cid', 'z'], as_index=False)
-        df = grp.filter(lambda x: x.size > 16)
+        df = grp.filter(lambda x: x.size > 4)
 
         def calc_fractality(df):
             f_d = calculate_fdim(df)
