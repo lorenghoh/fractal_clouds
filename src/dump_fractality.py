@@ -2,7 +2,9 @@ import os, glob, warnings
 import numpy as np
 import numba as nb
 import pandas as pd
-import pyarrow.parquet as pq 
+import pyarrow.parquet as pq
+
+from sklearn import linear_model as lm
 
 from pick_cloud_projection import pick_cid
 import load_config
@@ -11,14 +13,6 @@ import calc_radius
 from joblib import Parallel, delayed
 
 c, config = load_config.c, load_config.config
-
-def count_box(Z, k):
-    S = np.add.reduceat(
-        np.add.reduceat(Z, np.arange(0, Z.shape[0], k), axis=0),
-                           np.arange(0, Z.shape[1], k), axis=1)
-
-    # We count non-empty (0) and non-full boxes (k*k)
-    return len(np.where((S > 0) & (S < k*k))[0])
 
 def build_subdomain(df):
     x, y = df.x, df.y
@@ -55,31 +49,90 @@ def calculate_fdim(df):
             + np.roll(xy_map, -1, axis=1)
     xy_map[xy_temp == 4] = 0
 
-    # Build successive box sizes (from 2**n down to 2**1)
-    # p = min(xy_map.shape)
-    # n = 2**np.floor(np.log(p)/np.log(2))
-    # n = int(np.log(n)/np.log(2))
-    # sizes = 2**np.arange(n, 1, -1)
+    def count_box(Z, k):
+        S = np.add.reduceat(
+            np.add.reduceat(Z, np.arange(0, Z.shape[0], k), axis=0),
+                            np.arange(0, Z.shape[1], k), axis=1)
+
+        # We count non-empty (0) and non-full boxes (k*k)
+        return len(np.where((S > 0) & (S < k*k))[0])
 
     # Scaling factor based on L/R
-    # r_g = calc_radius.calculate_radial_distance(df)
-    r_d = calc_radius.calculate_geometric_r(df)
-    sizes = np.arange(int(r_d), 1, -1)
+    # r_ = calc_radius.calculate_radial_distance(df)
+    r_ = calc_radius.calculate_geometric_r(df)
+    sizes = np.arange(int(r_), 1, -1)
+    if len(sizes) <= 2:
+        return 0
 
     # Actual box counting with decreasing size
     counts = []
     for size in sizes:
         counts.append(count_box(xy_map, size))
     
-    # sizes = sizes / r_d
-    # Fit the successive log(sizes) with log (counts)
+    sizes = sizes / r_
+    # Fit the successive log10(sizes) with log10(counts)
     with warnings.catch_warnings():
         warnings.filterwarnings('error')
         try:
-            c = np.polyfit(np.log(sizes), np.log(counts), 1)
-            return c, sizes, counts
+            c = np.polyfit(np.log10(sizes), np.log10(counts), 1)
+            return -c[0]
         except:
-            return [0, 0], 0, 0
+            return 0
+
+def calculate_pdim(df):
+    # Build sub-domain based on the tracking data
+    xy_map = build_subdomain(df)
+
+    # Given a field, return coarse observation
+    def observe_coarse_field(Z, k):
+        S = np.add.reduceat(
+            np.add.reduceat(Z, np.arange(0, Z.shape[0], k), axis=0),
+                            np.arange(0, Z.shape[1], k), axis=1)
+
+        # Normalize coarse observation
+        threshold = k**2 * 0.5
+        S[S < threshold] = 0
+        S[S > threshold] = 1
+        return S
+
+    # Given a field, calculate perimeter
+    def calc_perimeter(Z):
+        return np.sum(Z[:, 1:] != Z[:, :-1]) + \
+            np.sum(Z[1:, :] != Z[:-1, :])
+
+    # Scaling factor based on L/R
+    # r_ = calc_radius.calculate_radial_distance(df)
+    r_ = calc_radius.calculate_geometric_r(df)
+    sizes = np.arange(int(r_), 0, -1)
+    if len(sizes) <= 2:
+        return 0
+
+    # Calculate perimeter and area
+    area = np.sum(xy_map[xy_map > 0]) * c.dx**2
+    p = calc_perimeter(xy_map) * c.dx
+
+    Dp = []
+    for size in sizes:
+        # Coefficient for horizontal scale
+        C = c.dx * size
+
+        Z = observe_coarse_field(xy_map, size)
+        area = np.sum(Z) * C**2
+        p = calc_perimeter(Z) * C
+
+        Dp.append(p)
+    sizes = sizes / r_
+    
+    with warnings.catch_warnings():
+        warnings.filterwarnings('error')
+        try:
+            # Fit the successive log(sizes) with log (counts)
+            model = lm.RidgeCV(fit_intercept=True)
+            X = np.log10(sizes)[:, None]
+            model.fit (X, np.log10(Dp))
+            return -model.coef_[0] * 2
+        except:
+            return 0
 
 if __name__ == '__main__':
     filelist = sorted(glob.glob(f"{config['tracking']}/clouds_*.pq"))
@@ -103,20 +156,18 @@ if __name__ == '__main__':
         df = df[df.type == 0]
     
         grp = df.groupby(['cid', 'z'], as_index=False)
-        df = grp.filter(lambda x: x.size > 8)
+        df = grp.filter(lambda x: x.size > 16)
 
-        # Project the 3D cloud onto surface 
-        # df = df.drop_duplicates(subset=['y', 'x'], keep='first')
-
-        def calc_fdim_to_df(df):
-            c, _, _ = calculate_fdim(df[-1])
-            c = -c[0]
-            return pd.DataFrame({'fdim': [c]})
+        def calc_fractality(df):
+            f_d = calculate_fdim(df)
+            p_d = calculate_pdim(df)
+            return pd.DataFrame({'fdim': [f_d],
+                                 'pdim': [p_d]})
 
         group = df.groupby(['cid', 'z'], as_index=False)
         with Parallel(n_jobs=16) as Pr:
-            result = Pr(delayed(calc_fdim_to_df)
-                        (grouped) for grouped in group) 
+            result = Pr(delayed(calc_fractality)
+                        (grouped) for _, grouped in group) 
             df = pd.concat(result, ignore_index=True)
             df.to_parquet(f'../pq/fdim_dump_{t:03d}.pq')
             
