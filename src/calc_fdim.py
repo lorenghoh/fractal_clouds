@@ -38,19 +38,19 @@ def calculate_fdim(df):
     # n = int(np.log(n)/np.log(2))
     # sizes = 2**np.arange(n, 1, -1)
 
-    # Scaling factor based on L/R
-    r_g = calc_radius.calculate_radial_distance(df)
-    r_d = calc_radius.calculate_geometric_r(df)
-    sizes = np.arange(int(r_d), 1, -1)
+    # # Scaling factor based on L/R
+    # r_ = calc_radius.calculate_radial_distance(df)
+    r_ = calc_radius.calculate_geometric_r(df)
+    sizes = np.arange(int(r_), 1, -1)
 
     # Actual box counting with decreasing size
     counts = []
     for size in sizes:
         counts.append(count_box(xy_map, size))
-    
-    sizes = sizes / r_d
+    sizes = sizes / r_
+
     # Fit the successive log(sizes) with log (counts)
-    c = np.polyfit(np.log(sizes), np.log(counts), 1)
+    c = np.polyfit(np.log10(sizes), np.log10(counts), 1)
     print(-c[0])
 
     return c, sizes, counts
@@ -58,8 +58,7 @@ def calculate_fdim(df):
 if __name__ == '__main__':
     # Calculate fdim from a sample cloud 
     # Read cloud core projection image
-    df = pick_cid(4563, 0)
-
+    df = pick_cid(41114, 4)
     c, sizes, counts = calculate_fdim(df)
 
     #---- Plotting 
@@ -75,24 +74,23 @@ if __name__ == '__main__':
             'legend.frameon': False,
         })
     plt.rc('text', usetex=True)
-    plt.rc('font', family='Helvetica')
-
-    cmap = sns.cubehelix_palette(start=1.2, hue=1, \
-                                 light=1, rot=-1.05, as_cmap=True)
+    plt.rc('font', family='Serif')
 
     ax = plt.subplot(1, 1, 1)
     plt.xlabel(r'$\log_{10}$ $\eta$')
     plt.ylabel(r'$\log_{10}$ N($\eta$)')
 
-    plt.plot(np.log(sizes), np.log(counts), marker='o', lw=0.75)
-    xi = np.linspace(-2.25, 0.2, 50)
+    plt.plot(np.log10(sizes), np.log10(counts), 
+            ms=3, marker='o', lw=0.75)
+    xmin, xmax = np.min(np.log10(sizes)), np.max(np.log10(sizes))
+    xi = np.linspace(xmin-0.2, xmax+0.2, 50)
     label = r"$\mathcal{D}_\mathrm{box}$ = " + f"{-c[0]:.3f}"
     plt.plot(xi, c[0]*xi+c[1], 'k-', lw=0.9, label=label)
 
     plt.legend()
 
     plt.tight_layout(pad=0.5)
-    figfile = 'png/{}.png'.format(os.path.splitext(__file__)[0])
+    figfile = '../png/{}.png'.format(os.path.splitext(__file__)[0])
     print('\t Writing figure to {}...'.format(figfile))
     plt.savefig(figfile,bbox_inches='tight', dpi=300, \
                 facecolor='w', transparent=True)
