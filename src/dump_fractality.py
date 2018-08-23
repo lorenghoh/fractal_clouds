@@ -92,7 +92,7 @@ def calculate_pdim(df):
         # Normalize coarse observation
         threshold = k**2 * 0.5
         S[S < threshold] = 0
-        S[S > threshold] = 1
+        S[S >= threshold] = 1
         return S
 
     # Given a field, calculate perimeter
