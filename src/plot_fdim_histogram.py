@@ -12,9 +12,8 @@ import seaborn as sns
 from load_config import c, config
 
 if __name__ == '__main__':
-    filelist = sorted(glob.glob(f"../pq/fdim_dump_*.pq"))
+    filelist = sorted(glob.glob(f"../pq/fdim_hres_dump_*.pq"))
     df = pq.ParquetDataset(filelist).read(nthreads=16).to_pandas()
-    desc = df.describe().squeeze()
 
     #---- Plotting 
     fig = plt.figure(1, figsize=(4.5, 3))
@@ -22,7 +21,7 @@ if __name__ == '__main__':
     sns.set_context('paper')
     sns.set_style('ticks', 
         {
-            'axes.grid': False, 
+            'axes.grid': False,
             'axes.linewidth': '0.75',
             'grid.color': '0.75',
             'grid.linestyle': u':',
@@ -32,15 +31,23 @@ if __name__ == '__main__':
     plt.rc('font', family='Serif')
 
     ax = plt.subplot(1, 1, 1)
-    plt.xlabel(r'$\mathcal{D}_\mathrm{box}$')
-    plt.ylabel(r'Frequency')
 
-    cmap = sns.cubehelix_palette(start=1.2, hue=1, \
-                                 light=1, rot=-1.05, as_cmap=True)
-    sns.distplot(df, ax=ax, bins=20)
+    # Filter dataframe by f_dim and plot
+    df = df[(df.fdim >= 0.05) & (df.pdim >= 0.05) & (df.pdim <= 2.2)]
+    
+    ax = sns.distplot(df.pdim, norm_hist=True, ax=ax)
+    plt.xlabel(r'$\mathcal{D}_\mathrm{p}$')
+    plt.ylabel(r'Probability Density')
+
+    # Retract KDE distribution
+    x_k, y_k = ax.get_lines()[0].get_data()
+
+    # Dataframe statistics
+    desc = df.pdim.describe().squeeze()
+    print(desc)
 
     # Normal distribution given histogram statistics
-    xi = np.linspace(0, 2.2, 100)
+    xi = np.linspace(0, 2.5, 100)
     mu_ = desc['mean']
     sig_ = desc['std']
     plt.plot(xi, (2 * np.pi * sig_**2)**(-0.5) * \
@@ -50,7 +57,7 @@ if __name__ == '__main__':
     box_text = "Count: {:,} \n".format(int(desc['count'])) \
                 + f"Mean: {mu_:.3f} \n " \
                 + f"Std: {sig_:.3f}"
-    ax.text(0, 3.5, box_text, fontsize=10, va='top', 
+    ax.text(0, max(y_k), box_text, fontsize=10, va='top', 
             bbox=dict(boxstyle='round, pad=0.5', fc='w'))
 
     plt.tight_layout(pad=0.5)
