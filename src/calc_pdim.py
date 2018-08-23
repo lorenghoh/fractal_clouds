@@ -3,6 +3,8 @@ import numba as nb
 import pandas as pd
 import pyarrow.parquet as pq 
 
+from sklearn import linear_model as lm
+
 import matplotlib, os
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -29,7 +31,7 @@ def calc_perimeter(Z):
 if __name__ == '__main__':
     # Calculate fdim from a sample cloud 
     # Read horizontal slice from a cloud core
-    df = pick_cid(4563, 0)
+    df = pick_cid(42470, 0)
 
     x_width = max(df.x) - min(df.x)
     y_width = max(df.y) - min(df.y)
@@ -37,31 +39,34 @@ if __name__ == '__main__':
     xy_map[df.y, df.x] = 1
 
     # Scaling factor based on L/R
-    r_g = calc_radius.calculate_radial_distance(df)
-    r_d = calc_radius.calculate_geometric_r(df)
-    sizes = np.arange(int(r_g), 0, -1)
+    # r_ = calc_radius.calculate_radial_distance(df)
+    r_ = calc_radius.calculate_geometric_r(df)
+    sizes = np.arange(int(r_), 0, -1)
 
     # Calculate perimeter and area
-    area = np.sum(xy_map[xy_map > 0]) * 25**2
-    p = calc_perimeter(xy_map) * 25
+    area = np.sum(xy_map[xy_map > 0]) * c.dx**2
+    p = calc_perimeter(xy_map) * c.dx
 
     print("Dp =", 2*np.log10(p)/np.log10(area))
 
     Dp = []
     for size in sizes:
         # Coefficient for horizontal scale
-        C = 25 * size
+        C = c.dx * size
 
         Z = observe_coarse_field(xy_map, size)
         area = np.sum(Z) * C**2
         p = calc_perimeter(Z) * C
 
         Dp.append(p)
-    sizes = sizes / r_g
+    sizes = sizes / r_
 
     # Fit the successive log(sizes) with log (counts)
-    c = np.polyfit(np.log10(sizes), np.log10(Dp), 1)
-    print(-c[0])
+    model = lm.RidgeCV(fit_intercept=True)
+    X = np.log10(sizes)[:, None]
+    model.fit (X, np.log10(Dp))
+
+    print(f"    {model.coef_[0] * 2}")
 
     #---- Plotting 
     fig = plt.figure(1, figsize=(3, 3))
@@ -76,26 +81,25 @@ if __name__ == '__main__':
             'legend.frameon': False,
         })
     plt.rc('text', usetex=True)
-    plt.rc('font', family='Helvetica')
-
-    cmap = sns.cubehelix_palette(start=1.2, hue=1, \
-                                 light=1, rot=-1.05, as_cmap=True)
+    plt.rc('font', family='Serif')
 
     ax = plt.subplot(1, 1, 1)
     plt.xlabel(r'$\log_{10}$ $L/R$')
     plt.ylabel(r'$\log_{10}$ $P$')
 
-    xi = np.linspace(min(np.log10(sizes)), max(np.log10(sizes)), 50)
-    plt.plot(xi, c[0]*xi+c[1], 'k-', lw=0.9)
-
-    label = f"P = (L/R)$^{{{-c[0]:.3f}}}$"
+    label = f"P = (L/R)$^{{{2 * model.coef_[0]:.3f}/2}}$"
     plt.plot(np.log10(sizes), np.log10(Dp), 
              marker='o', lw=0.75, label=label)
+
+    xmin, xmax = np.min(np.log10(sizes)), np.max(np.log10(sizes))
+    xi = np.linspace(xmin-0.1, xmax+0.1, 50)
+    y_fit = model.predict(xi[:, None])
+    plt.plot(xi, y_fit)
 
     plt.legend()
 
     plt.tight_layout(pad=0.5)
-    figfile = 'png/{}.png'.format(os.path.splitext(__file__)[0])
+    figfile = '../png/{}.png'.format(os.path.splitext(__file__)[0])
     print('\t Writing figure to {}...'.format(figfile))
     plt.savefig(figfile,bbox_inches='tight', dpi=300, \
                 facecolor='w', transparent=True)
