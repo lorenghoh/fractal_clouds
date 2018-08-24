@@ -12,7 +12,7 @@ import seaborn as sns
 from load_config import c, config
 
 if __name__ == '__main__':
-    filelist = sorted(glob.glob(f"../pq/fdim_hres_dump_*.pq"))
+    filelist = sorted(glob.glob(f"../pq/fdim_dump_*.pq"))
     df = pq.ParquetDataset(filelist).read(nthreads=16).to_pandas()
 
     #---- Plotting 
@@ -33,7 +33,7 @@ if __name__ == '__main__':
     ax = plt.subplot(1, 1, 1)
 
     # Filter dataframe by f_dim and plot
-    df = df[(df.fdim >= 0.05) & (df.pdim >= 0.05) & (df.pdim <= 2.2)]
+    df = df[(df.fdim > 0.1) & (df.pdim > 0.1) & (df.pdim <= 2.5)]
     
     ax = sns.distplot(df.pdim, norm_hist=True, ax=ax)
     plt.xlabel(r'$\mathcal{D}_\mathrm{p}$')
@@ -48,7 +48,8 @@ if __name__ == '__main__':
 
     # Normal distribution given histogram statistics
     xi = np.linspace(0, 2.5, 100)
-    mu_ = desc['mean']
+    # mu_ = desc['mean']
+    mu_ = x_k[np.argmax(y_k)]
     sig_ = desc['std']
     plt.plot(xi, (2 * np.pi * sig_**2)**(-0.5) * \
              np.exp(-(xi - mu_)**2 / (2 * sig_**2)))
