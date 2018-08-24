@@ -33,22 +33,23 @@ if __name__ == '__main__':
     ax = plt.subplot(1, 1, 1)
 
     # Filter dataframe by f_dim and plot
-    df = df[(df.fdim > 0.1) & (df.pdim > 0.1) & (df.pdim <= 2.5)]
+    # df = df[(df.fdim > 0.05) & (df.pdim > 0.05)]
+    df = df[(df.fdim > 0.05) & (df.fdim < 2.5)]
     
-    ax = sns.distplot(df.pdim, norm_hist=True, ax=ax)
-    plt.xlabel(r'$\mathcal{D}_\mathrm{p}$')
+    ax = sns.distplot(df.fdim, norm_hist=True, ax=ax)
+    plt.xlabel(r'$\mathcal{D}_\mathrm{f}$')
     plt.ylabel(r'Probability Density')
 
     # Retract KDE distribution
     x_k, y_k = ax.get_lines()[0].get_data()
 
     # Dataframe statistics
-    desc = df.pdim.describe().squeeze()
+    desc = df.fdim.describe().squeeze()
     print(desc)
 
     # Normal distribution given histogram statistics
     xi = np.linspace(0, 2.5, 100)
-    # mu_ = desc['mean']
+    # mu_ = desc['50%']
     mu_ = x_k[np.argmax(y_k)]
     sig_ = desc['std']
     plt.plot(xi, (2 * np.pi * sig_**2)**(-0.5) * \
