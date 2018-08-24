@@ -33,7 +33,7 @@ def build_subdomain(df):
 
     x_width = max(x) - min(x)
     y_width = max(y) - min(y)
-    xy_map = np.zeros((y_width+8, x_width+8), dtype=int)
+    xy_map = np.zeros((y_width + 4, x_width + 4), dtype=int)
     xy_map[y - min(y), x - min(x)] = 1
 
     return xy_map
@@ -54,13 +54,16 @@ def calculate_fdim(df):
             np.add.reduceat(Z, np.arange(0, Z.shape[0], k), axis=0),
                             np.arange(0, Z.shape[1], k), axis=1)
 
-        # We count non-empty (0) and non-full boxes (k*k)
-        return len(np.where((S > 0) & (S < k*k))[0])
+        # We count non-empty (0) and none-full boxes (k*k)
+        # return len(np.where((S > 0) & (S < k*k))[0])
+        return len(np.where(S > 0)[0])
 
     # Scaling factor based on L/R
     # r_ = calc_radius.calculate_radial_distance(df)
     r_ = calc_radius.calculate_geometric_r(df)
     sizes = np.arange(int(r_), 1, -1)
+    if len(sizes) <= 2:
+        return 0
 
     # Actual box counting with decreasing size
     counts = []
@@ -72,8 +75,11 @@ def calculate_fdim(df):
     with warnings.catch_warnings():
         warnings.filterwarnings('error')
         try:
-            c = np.polyfit(np.log10(sizes), np.log10(counts), 1)
-            return -c[0]
+            # Fit the successive log(sizes) with log (counts)
+            model = lm.BayesianRidge()
+            X = np.log10(sizes)[:, None]
+            model.fit(X, np.log10(counts))
+            return -model.coef_[0]
         except:
             return 0
 
@@ -125,7 +131,7 @@ def calculate_pdim(df):
             # Fit the successive log(sizes) with log (counts)
             model = lm.RidgeCV(fit_intercept=True)
             X = np.log10(sizes)[:, None]
-            model.fit (X, np.log10(Dp))
+            model.fit(X, np.log10(Dp))
             return -model.coef_[0] * 2
         except:
             return 0
@@ -134,7 +140,7 @@ if __name__ == '__main__':
     filelist = sorted(glob.glob(f"{config['tracking']}/clouds_*.pq"))
 
     # Assert dataset integrity
-    assert len(filelist) == c.nt
+    # assert len(filelist) == c.nt
 
     for t, f in enumerate(filelist):
         print(f'\t {t}/{len(filelist)} ({t/len(filelist)*100:.1f} %)', end='\r')
@@ -152,7 +158,7 @@ if __name__ == '__main__':
         df = df[df.type == 0]
     
         grp = df.groupby(['cid', 'z'], as_index=False)
-        df = grp.filter(lambda x: x.size > 4)
+        df = grp.filter(lambda x: x.size > 0)
 
         def calc_fractality(df):
             f_d = calculate_fdim(df)
@@ -165,5 +171,5 @@ if __name__ == '__main__':
             result = Pr(delayed(calc_fractality)
                         (grouped) for _, grouped in group) 
             df = pd.concat(result, ignore_index=True)
-            df.to_parquet(f'../pq/fdim_dump_{t:03d}.pq')
+            df.to_parquet(f'../pq/fdim_hres_dump_{t:03d}.pq')
             
