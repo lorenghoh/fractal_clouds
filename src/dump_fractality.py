@@ -88,7 +88,7 @@ def calculate_pdim(df):
                             np.arange(0, Z.shape[1], k), axis=1)
 
         # Normalize coarse observation
-        threshold = k**2 * 0.95
+        threshold = k**2 * 0.9
         S[S <= threshold] = 0
         S[S > threshold] = 1
         return S
