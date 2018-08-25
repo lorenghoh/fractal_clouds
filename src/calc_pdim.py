@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 from pick_cloud_projection import pick_cid 
+from load_config import c, config
 import calc_radius
 
 # Given a field, return coarse observation
@@ -21,7 +22,10 @@ def observe_coarse_field(Z, k):
 
     # Normalize coarse observation
     S[S > 0] = 1
-    return S
+    # Rebuild sampling map for rolling
+    S_ = np.zeros((S.shape[0]+2, S.shape[1]+2))
+    S_[1:-1, 1:-1] = S[:]
+    return S_
 
 # Given a field, calculate perimeter
 def calc_perimeter(Z):
@@ -31,7 +35,7 @@ def calc_perimeter(Z):
 if __name__ == '__main__':
     # Calculate fdim from a sample cloud 
     # Read horizontal slice from a cloud core
-    df = pick_cid(42470, 0)
+    df = pick_cid(11281, 0)
 
     x_width = max(df.x) - min(df.x)
     y_width = max(df.y) - min(df.y)
@@ -41,13 +45,11 @@ if __name__ == '__main__':
     # Scaling factor based on L/R
     # r_ = calc_radius.calculate_radial_distance(df)
     r_ = calc_radius.calculate_geometric_r(df)
-    sizes = np.arange(int(r_), 0, -1)
+    sizes = np.arange(int(r_/2), 0, -1)
 
     # Calculate perimeter and area
     area = np.sum(xy_map[xy_map > 0]) * c.dx**2
     p = calc_perimeter(xy_map) * c.dx
-
-    print("Dp =", 2*np.log10(p)/np.log10(area))
 
     Dp = []
     for size in sizes:
@@ -55,9 +57,7 @@ if __name__ == '__main__':
         C = c.dx * size
 
         Z = observe_coarse_field(xy_map, size)
-        area = np.sum(Z) * C**2
         p = calc_perimeter(Z) * C
-
         Dp.append(p)
     sizes = sizes / r_
 
@@ -65,8 +65,6 @@ if __name__ == '__main__':
     model = lm.RidgeCV(fit_intercept=True)
     X = np.log10(sizes)[:, None]
     model.fit (X, np.log10(Dp))
-
-    print(f"    {model.coef_[0] * 2}")
 
     #---- Plotting 
     fig = plt.figure(1, figsize=(3, 3))
@@ -87,7 +85,7 @@ if __name__ == '__main__':
     plt.xlabel(r'$\log_{10}$ $L/R$')
     plt.ylabel(r'$\log_{10}$ $P$')
 
-    label = f"P = (L/R)$^{{{2 * model.coef_[0]:.3f}/2}}$"
+    label = f"P $\propto$ (L/R)$^{{{model.coef_[0]:.3f}}}$"
     plt.plot(np.log10(sizes), np.log10(Dp), 
              marker='o', lw=0.75, label=label)
 
