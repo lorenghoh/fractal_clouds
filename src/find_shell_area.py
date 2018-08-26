@@ -10,8 +10,9 @@ import seaborn as sns
 
 from pick_cloud_projection import pick_cid 
 import calc_radius
-import calc_pdim
 import find_largest_clouds as find_lc
+
+from load_config import config
 
 # Given a field, return coarse observation
 def observe_coarse_field(Z, k):
@@ -20,7 +21,7 @@ def observe_coarse_field(Z, k):
                            np.arange(0, Z.shape[1], k), axis=1)
 
     # Normalize coarse observation
-    thold = k**2 * 0.95
+    thold = k**2 * 0.98
     S[S < thold] = 0
     S[S >= thold] = 1
     return S
@@ -32,9 +33,9 @@ def find_shell_area_fraction(df):
     xy_map[df.y, df.x] = 1
 
     # Radius estimates 
-    r_g = calc_radius.calculate_radial_distance(df)
-    r_d = calc_radius.calculate_geometric_r(df)
-    sizes = np.arange(int(r_g), 0, -1)
+    # r_ = calc_radius.calculate_radial_distance(df)
+    r_ = calc_radius.calculate_geometric_r(df)
+    sizes = np.arange(int(r_), 0, -1)
 
     # Resolution
     dx = 25
@@ -47,26 +48,26 @@ def find_shell_area_fraction(df):
         Z = observe_coarse_field(xy_map, size)
         areas.append(np.array(area - np.sum(Z) * dxx**2)/area)
 
-    sizes = np.array(sizes)/r_g
+    sizes = np.array(sizes) / r_
     return sizes, areas
 
 if __name__ == '__main__':
     sizes, areas = [], []
     c1, c2 = [], []
 
-    filename = 'tracking/clouds_00000121.pq'
+    filename = f'{config["tracking"]}/clouds_00000121.pq'
     lc = find_lc.find_largest_clouds(filename)
-    cids = lc.index
+    cids = lc.index[5:60:5]
 
     max_index = 6
     for i in range(max_index):
-        df = pick_cid(cids[i], 4)
+        df = pick_cid(cids[i], 0)
 
         s_, a_ = find_shell_area_fraction(df)
         sizes.append(s_)
         areas.append(a_)
 
-        m_ = (s_ > 0.33)
+        m_ = (s_ > 0.4)
         c_ = np.polyfit(s_[m_], np.array(a_)[m_], 1)
         c1.append(c_)
         c_ = np.polyfit(s_[~m_], np.array(a_)[~m_], 1)
@@ -86,7 +87,7 @@ if __name__ == '__main__':
             'legend.frameon': True,
         })
     plt.rc('text', usetex=True)
-    plt.rc('font', family='Helvetica')
+    plt.rc('font', family='Serif')
 
     pal = sns.color_palette()
 
@@ -112,7 +113,7 @@ if __name__ == '__main__':
         plt.legend(loc=4)
 
     plt.tight_layout(pad=0.5)
-    figfile = 'png/{}.png'.format(os.path.splitext(__file__)[0])
+    figfile = '../png/{}.png'.format(os.path.splitext(__file__)[0])
     print('\t Writing figure to {}...'.format(figfile))
     plt.savefig(figfile,bbox_inches='tight', dpi=300, \
                 facecolor='w', transparent=True)
