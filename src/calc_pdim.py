@@ -45,26 +45,28 @@ if __name__ == '__main__':
     # Scaling factor based on L/R
     # r_ = calc_radius.calculate_radial_distance(df)
     r_ = calc_radius.calculate_geometric_r(df)
-    sizes = np.arange(int(r_/2), 0, -1)
+    sizes = np.arange(int(r_), 0, -1)
 
     # Calculate perimeter and area
     area = np.sum(xy_map[xy_map > 0]) * c.dx**2
     p = calc_perimeter(xy_map) * c.dx
 
-    Dp = []
+    X_p, Y_p = [], []
     for size in sizes:
         # Coefficient for horizontal scale
         C = c.dx * size
 
         Z = observe_coarse_field(xy_map, size)
         p = calc_perimeter(Z) * C
-        Dp.append(p)
-    sizes = sizes / r_
+
+        X_p.append(size)
+        Y_p.append(p)
+    # sizes = sizes / r_
 
     # Fit the successive log(sizes) with log (counts)
     model = lm.RidgeCV(fit_intercept=True)
-    X = np.log10(sizes)[:, None]
-    model.fit (X, np.log10(Dp))
+    X = np.log10(X_p)[:, None]
+    model.fit (X, np.log10(Y_p))
 
     #---- Plotting 
     fig = plt.figure(1, figsize=(3, 3))
@@ -86,10 +88,10 @@ if __name__ == '__main__':
     plt.ylabel(r'$\log_{10}$ $P$')
 
     label = f"P $\propto$ (L/R)$^{{{model.coef_[0]:.3f}}}$"
-    plt.plot(np.log10(sizes), np.log10(Dp), 
+    plt.plot(np.log10(X_p), np.log10(Y_p), 
              marker='o', lw=0.75, label=label)
 
-    xmin, xmax = np.min(np.log10(sizes)), np.max(np.log10(sizes))
+    xmin, xmax = np.min(np.log10(X_p)), np.max(np.log10(X_p))
     xi = np.linspace(xmin-0.1, xmax+0.1, 50)
     y_fit = model.predict(xi[:, None])
     plt.plot(xi, y_fit)
