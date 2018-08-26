@@ -33,15 +33,19 @@ def build_subdomain(df):
 
     x_width = max(x) - min(x)
     y_width = max(y) - min(y)
-    xy_map = np.zeros((y_width + 4, x_width + 4), dtype=int)
-    xy_map[y - min(y), x - min(x)] = 1
+    xy_map = np.zeros((y_width+2, x_width+2), dtype=int)
+    xy_map[y - min(y)+1, x - min(x)+1] = 1
+
+    # Filter out noise
+    xy_temp = np.roll(xy_map, 1, axis=0) \
+            + np.roll(xy_map, -1, axis=0) \
+            + np.roll(xy_map, 1, axis=1) \
+            + np.roll(xy_map, -1, axis=1)
+    xy_map[xy_temp == 0] = 0
 
     return xy_map
 
-def calculate_fdim(df):
-    # Build sub-domain based on the tracking data
-    xy_map = build_subdomain(df)
-
+def find_perimeter(xy_map):
     # Leave only the perimeter of the cloud 
     xy_temp = np.roll(xy_map, 1, axis=0) \
             + np.roll(xy_map, -1, axis=0) \
@@ -49,20 +53,26 @@ def calculate_fdim(df):
             + np.roll(xy_map, -1, axis=1)
     xy_map[xy_temp == 4] = 0
 
+    return xy_map
+
+def calculate_fdim(df):
+    # Build sub-domain based on the tracking data
+    xy_map = build_subdomain(df)
+    xy_map = find_perimeter(xy_map)
+
     def count_box(Z, k):
         S = np.add.reduceat(
             np.add.reduceat(Z, np.arange(0, Z.shape[0], k), axis=0),
                             np.arange(0, Z.shape[1], k), axis=1)
 
-        # We count non-empty (0) and none-full boxes (k*k)
-        # return len(np.where((S > 0) & (S < k*k))[0])
-        return len(np.where(S > 0)[0])
+        # Count non-empty (0) and non-full (k*k) boxes
+        return len(np.where((S > 0) & (S < k*k))[0])
 
     # Scaling factor based on L/R
     # r_ = calc_radius.calculate_radial_distance(df)
     r_ = calc_radius.calculate_geometric_r(df)
     sizes = np.arange(int(r_), 1, -1)
-    if len(sizes) <= 2:
+    if len(sizes) < 4:
         return 0
 
     # Actual box counting with decreasing size
@@ -75,7 +85,7 @@ def calculate_fdim(df):
     with warnings.catch_warnings():
         warnings.filterwarnings('error')
         try:
-            # Fit the successive log(sizes) with log (counts)
+            # Fit the successive log10(sizes) with log10 (counts)
             model = lm.BayesianRidge()
             X = np.log10(sizes)[:, None]
             model.fit(X, np.log10(counts))
@@ -94,15 +104,11 @@ def calculate_pdim(df):
                             np.arange(0, Z.shape[1], k), axis=1)
 
         # Normalize coarse observation
-        threshold = k**2 * 0.9
-        S[S <= threshold] = 0
-        S[S > threshold] = 1
-        return S
-
-    # Given a field, calculate perimeter
-    def calc_perimeter(Z):
-        return np.sum(Z[:, 1:] != Z[:, :-1]) + \
-            np.sum(Z[1:, :] != Z[:-1, :])
+        S[S > 0] = 1
+        # Rebuild sampling map for rolling
+        S_ = np.zeros((S.shape[0]+2, S.shape[1]+2))
+        S_[1:-1, 1:-1] = S[:]
+        return S_
 
     # Scaling factor based on L/R
     # r_ = calc_radius.calculate_radial_distance(df)
@@ -111,28 +117,33 @@ def calculate_pdim(df):
 
     # Calculate perimeter and area
     area = np.sum(xy_map[xy_map > 0]) * c.dx**2
-    p = calc_perimeter(xy_map) * c.dx
+    p = np.sum(find_perimeter(xy_map)) * c.dx
 
-    Dp = []
+    X_p, Y_p = [], []
     for size in sizes:
         # Coefficient for horizontal scale
         C = c.dx * size
 
         Z = observe_coarse_field(xy_map, size)
-        area = np.sum(Z) * C**2
-        p = calc_perimeter(Z) * C
+        if np.sum(Z) == 0:
+            continue
+        p = np.sum(find_perimeter(Z)) * C
 
-        Dp.append(p)
-    sizes = sizes / r_
+        X_p.append(size * c.dx)
+        Y_p.append(p)
+
+    if len(np.unique(Y_p)) < 2:
+        return 0
+    X_p = X_p / r_
     
     with warnings.catch_warnings():
         warnings.filterwarnings('error')
         try:
-            # Fit the successive log(sizes) with log (counts)
-            model = lm.RidgeCV(fit_intercept=True)
-            X = np.log10(sizes)[:, None]
-            model.fit(X, np.log10(Dp))
-            return -model.coef_[0] * 2
+            # Fit the successive log10(X_p) with log10 (Y_p)
+            model = lm.BayesianRidge()
+            X = np.log10(X_p)[:, None]
+            model.fit(X, np.log10(Y_p))
+            return -model.coef_[0]
         except:
             return 0
 
@@ -140,7 +151,7 @@ if __name__ == '__main__':
     filelist = sorted(glob.glob(f"{config['tracking']}/clouds_*.pq"))
 
     # Assert dataset integrity
-    # assert len(filelist) == c.nt
+    assert len(filelist) == c.nt
 
     for t, f in enumerate(filelist):
         print(f'\t {t}/{len(filelist)} ({t/len(filelist)*100:.1f} %)', end='\r')
@@ -171,5 +182,5 @@ if __name__ == '__main__':
             result = Pr(delayed(calc_fractality)
                         (grouped) for _, grouped in group) 
             df = pd.concat(result, ignore_index=True)
-            df.to_parquet(f'../pq/fdim_hres_dump_{t:03d}.pq')
+            df.to_parquet(f'../pq/fdim_dump_{t:03d}.pq')
             
