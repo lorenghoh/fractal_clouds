@@ -36,10 +36,10 @@ def find_shell_area_fraction(df):
     # Radius estimates 
     # r_ = calc_radius.calculate_radial_distance(df)
     r_ = calc_radius.calculate_geometric_r(df)
-    sizes = np.arange(int(r_), 0, -1)
+    sizes = np.arange(int(r_*2), 0, -1)
 
     # Resolution
-    dx = 25
+    dx = c.dx
 
     size, area = dx, np.array(np.sum(xy_map) * dx**2)
 
@@ -50,22 +50,22 @@ def find_shell_area_fraction(df):
         areas.append(np.array(area - np.sum(Z) * dxx**2)/area)
 
     sizes = np.array(sizes) / r_
-    return sizes, areas
+    return r_, sizes, areas
 
 if __name__ == '__main__':
-    r_, sizes, areas = [], [], []
+    radii, sizes, areas = [], [], []
     c1, c2 = [], []
 
     filename = f'{config["tracking"]}/clouds_00000121.pq'
     lc = find_lc.find_largest_clouds(filename)
-    cids = lc.index[0:120:10]
+    cids = lc.index[80:86]
 
     max_index = 6
     for i in range(max_index):
         df = pick_cid(cids[i], 0)
 
-        s_, a_ = find_shell_area_fraction(df)
-        r_.append(np.sqrt(df.shape[0]/np.pi))
+        r_, s_, a_ = find_shell_area_fraction(df)
+        radii.append(r_)
         sizes.append(s_)
         areas.append(a_)
 
@@ -101,7 +101,7 @@ if __name__ == '__main__':
         if i in [0, 3]:
             plt.ylabel(r'$\mathcal{A}_\mathrm{s}/\mathcal{A}$')
 
-        plt.title(rf'r $\approx$ {r_[i]*c.dx:.2f} [m]')
+        plt.title(rf'r $\approx$ {radii[i]*c.dx:.2f} [m]')
         plt.plot(sizes[i], areas[i], marker='o', c='k', lw=1.25)
 
         m_ = (sizes[i] > 0.4)
@@ -112,6 +112,8 @@ if __name__ == '__main__':
         xi = np.linspace(min(sizes[i][~m_])-0.1, max(sizes[i][~m_])+0.1, 50)
         plt.plot(xi, c2[i][0]*xi+c2[i][1], '--', lw=0.75,
                  c=pal[1], label=f"S $\leq$ 0.4")
+
+        plt.xlim([0, 1.25])
 
         plt.legend(loc=4)
 
