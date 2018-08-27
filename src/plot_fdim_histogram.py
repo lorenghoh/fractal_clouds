@@ -13,7 +13,7 @@ from load_config import c, config
 
 if __name__ == '__main__':
     filelist = sorted(glob.glob(f"../pq/fdim_dump_*.pq"))
-    df = pq.ParquetDataset(filelist).read(nthreads=16).to_pandas()
+    df = pq.ParquetDataset(filelist[:195]).read(nthreads=16).to_pandas()
 
     #---- Plotting 
     fig = plt.figure(1, figsize=(4.5, 3))
@@ -31,25 +31,23 @@ if __name__ == '__main__':
     plt.rc('font', family='Serif')
 
     ax = plt.subplot(1, 1, 1)
-
-    # Filter dataframe by f_dim and plot
-    # df = df[(df.fdim > 0.05) & (df.pdim > 0.05)]
-    df = df[(df.fdim > 0.05) & (df.fdim < 2.5)]
     
-    ax = sns.distplot(df.fdim, norm_hist=True, ax=ax)
-    plt.xlabel(r'$\mathcal{D}_\mathrm{f}$')
+    # Filter dataframe by f_dim and plot
+    df = df[(df.pdim > 0.02)]
+    
+    ax = sns.distplot(df.pdim, norm_hist=True, ax=ax, bins=25)
+    plt.xlabel(r'$\mathcal{D}_\mathrm{p}$')
     plt.ylabel(r'Probability Density')
 
     # Retract KDE distribution
     x_k, y_k = ax.get_lines()[0].get_data()
 
     # Dataframe statistics
-    desc = df.fdim.describe().squeeze()
+    desc = df.pdim.describe().squeeze()
     print(desc)
 
     # Normal distribution given histogram statistics
-    xi = np.linspace(0, 2.5, 100)
-    # mu_ = desc['50%']
+    xi = np.linspace(-0.2, 0.8, 100)
     mu_ = x_k[np.argmax(y_k)]
     sig_ = desc['std']
     plt.plot(xi, (2 * np.pi * sig_**2)**(-0.5) * \
@@ -59,7 +57,7 @@ if __name__ == '__main__':
     box_text = "Count: {:,} \n".format(int(desc['count'])) \
                 + f"Mean: {mu_:.3f} \n " \
                 + f"Std: {sig_:.3f}"
-    ax.text(0, max(y_k), box_text, fontsize=10, va='top', 
+    ax.text(-0.2, max(y_k), box_text, fontsize=10, va='top', 
             bbox=dict(boxstyle='round, pad=0.5', fc='w'))
 
     plt.tight_layout(pad=0.5)
