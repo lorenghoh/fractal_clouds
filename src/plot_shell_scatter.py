@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 import calc_radius
+import find_largest_clouds as find_lc
 
 from joblib import Parallel, delayed
 
@@ -28,52 +29,87 @@ def observe_coarse_field(Z, k):
     return S
 
 def find_shell_area_fraction(df):
+    x, y = df.x, df.y
+    x_axis, y_axis = c.nx, c.ny
+    if (max(x) - min(x)) > x_axis // 2:
+        x_off = x_axis - np.min(x[(x > x_axis // 2)])
+        
+        # Shift x-coordinates
+        x = x + x_off
+        x[x >= x_axis] = x[x >= x_axis] - x_axis
+
+    if (max(y) - min(y)) > y_axis // 2:
+        y_off = y_axis - np.min(y[(y > y_axis // 2)])
+
+        # Shift y-coordinates
+        y = y + y_off
+        y[y >= y_axis] = y[y >= y_axis] - y_axis
+        
     x_width = max(df.x) - min(df.x)
     y_width = max(df.y) - min(df.y)
     xy_map = np.zeros((y_width+1, x_width+1), dtype=int)
-    xy_map[df.y, df.x] = 1
+    xy_map[y - min(y), x - min(x)] = 1
 
     # Radius estimates
     r_ = calc_radius.calculate_geometric_r(df)
-    sizes = np.arange(int(r_), 0, -1)
+    sizes = np.arange(int(r_*2), 0, -1)
 
-    size, area = c.dx, np.array(np.sum(xy_map) * c.dx**2)
-
+    area = np.array(np.sum(xy_map) * c.dx**2)
+    
     areas = []
-    for size in sizes:
-        dxx = c.dx * size
-        Z = observe_coarse_field(xy_map, size)
-        areas.append(np.array(area - np.sum(Z) * dxx**2)/area)
-
-    sizes = np.array(sizes) / r_
-    return sizes, areas
+    for k in sizes:
+        C = c.dx * k
+        Z = observe_coarse_field(xy_map, k)
+        areas.append(np.array(area - np.sum(Z)*C**2)/area)
+    
+    # sizes = np.array(sizes) / r_
+    if len(sizes) < 6:
+        return [0], [0]
+    area_ = np.ones(len(sizes)) * area
+    return sizes, areas, area_
 
 if __name__ == '__main__':
-    f = f'{config["tracking"]}/clouds_00000121.pq'
-    df = pq.read_pandas(f, nthreads=16).to_pandas()
+    for time in range(0, 540, 60):
+        f = f'{config["tracking"]}/clouds_00000{time:03d}.pq'
+        df = pq.read_pandas(f, nthreads=16).to_pandas()
 
-    # Translate indices to coordinates
-    df['z'] = df.coord // (c.nx * c.ny)
-    xy = df.coord % (c.nx * c.ny)
-    df['y'] = xy // c.ny 
-    df['x'] = xy % c.nx
+        lc = find_lc.find_largest_clouds(f)
+        cids = lc.index[0:120]
 
-    # Take cloud regions and trim noise
-    df = df[df.type == 0]
-    group = df.groupby(['cid', 'z'], as_index=False)
+        # Translate indices to coordinates
+        df['z'] = df.coord // (c.nx * c.ny)
+        xy = df.coord % (c.nx * c.ny)
+        df['y'] = xy // c.ny 
+        df['x'] = xy % c.nx
 
-    def group_shell(df):
-        s_, a_ = find_shell_area_fraction(df)
-        return pd.DataFrame({'size': [s_],
-                             'area': [a_]})
+        # Take cloud regions and trim noise
+        df = df[df.type == 0]
+        group = df.groupby(['cid', 'z'], as_index=False)
+        r, a, area = [], [], []
+        for cid in cids:
+            grp = df[df.cid == cid]
+        # for _, grp in group:
+            if grp.shape[0] < 6:
+                continue
+            try:
+                r_, a_, area_ = find_shell_area_fraction(grp)
+            except:
+                continue
+            r.append(r_)
+            a.append(a_)
+            area.append(area_)
+    # def group_shell(df):
+    #     r_, a_ = find_shell_area_fraction(df)
+    #     return pd.DataFrame({'r_': r_,
+    #                          'a_': a_})
 
-    with Parallel(n_jobs=16) as Pr:
-        result = Pr(delayed(group_shell)
-                    (grouped) for _, grouped in group)
-    df = pd.concat(result, ignore_index=True)
+    # with Parallel(n_jobs=16) as Pr:
+    #     result = Pr(delayed(group_shell)
+    #                 (grouped) for _, grouped in group)
+    # df = pd.concat(result, ignore_index=True)
 
     #---- Plotting 
-    fig = plt.figure(1, figsize=(8, 6))
+    fig = plt.figure(1, figsize=(6, 6))
     fig.clf()
     sns.set_context('paper')
     sns.set_style('ticks', 
@@ -87,7 +123,15 @@ if __name__ == '__main__':
     plt.rc('text', usetex=True)
     plt.rc('font', family='Serif')
 
-    plt.scatter(df.size, df.area)
+    r = np.concatenate(r).ravel()
+    a = np.concatenate(a).ravel()
+    area = np.concatenate(area).ravel() / 1e6
+    m_ = (r > 0) & (a > 0)
+
+    sc = plt.scatter(r[m_], a[m_], c=area[m_])
+    plt.colorbar(sc)
+    # plt.xlim([0, 1.25])
+    plt.xlim([0, 25])
 
     plt.tight_layout(pad=0.5)
     figfile = '../png/{}.png'.format(os.path.splitext(__file__)[0])
