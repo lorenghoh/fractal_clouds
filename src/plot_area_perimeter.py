@@ -41,8 +41,8 @@ def build_subdomain(df):
     xy_map = np.zeros((y_width+1, x_width+1), dtype=int)
     xy_map[y - min(y), x - min(x)] = 1
 
-    S_ = np.zeros((xy_map.shape[0]+4, xy_map.shape[1]+4))
-    S_[2:-2, 2:-2] = xy_map[:]
+    S_ = np.zeros((xy_map.shape[0]+2, xy_map.shape[1]+2))
+    S_[1:-1, 1:-1] = xy_map[:]
     return S_
 
 # Given a field, calculate perimeter
@@ -88,7 +88,7 @@ def dump_dataset():
             df.to_parquet(f'../pq/fdim_hres_ap_dump_{t:03d}.pq')
 
 if __name__ == '__main__':
-    dump_dataset()
+    # dump_dataset()
 
     filelist = sorted(glob.glob(f"../pq/fdim_hres_ap_dump_*.pq"))
     df = pq.ParquetDataset(filelist).read(nthreads=16).to_pandas()
@@ -110,21 +110,21 @@ if __name__ == '__main__':
 
     x = df.p
     y = df.a
-    m_ = (df.a > 0) & (df.p > 0)
 
     model = lm.BayesianRidge()
-    X = np.log10(x[m_])[:, None]
-    model.fit(X, np.log10(y[m_]))
+    X = np.log10(x)[:, None]
+    model.fit(X, np.log10(y))
     print(model.coef_[0])
 
-    xmin, xmax = np.min(np.log10(x[m_])), np.max(np.log10(x[m_]))
+    xmin, xmax = np.min(np.log10(x)), np.max(np.log10(x))
     xi = np.linspace(xmin-0.1, xmax+0.1, 50)
     y_fit = model.predict(xi[:, None])
 
-    plt.plot(xi, y_fit, 'r--')
-    plt.plot(xi, 1.5*xi-0.5, 'k--')
+    label = r'A $\propto$ P$^{2/D_p}$ $\approx$ P$^{1.462}$'
+    plt.plot(xi, y_fit, 'r--', zorder=9, label=label)
+    plt.legend()
 
-    plt.scatter(np.log10(x[m_]), np.log10(y[m_]))
+    plt.plot(np.log10(x), np.log10(y), '.', ms=3)
 
     plt.xlabel(r'$\log_{10}$ Perimeter [m]')
     plt.ylabel(r'$\log_{10}$ Area [m$^2$]')
