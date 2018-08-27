@@ -12,7 +12,8 @@ from pick_cloud_projection import pick_cid
 import calc_radius
 import find_largest_clouds as find_lc
 
-from load_config import config
+import load_config
+c, config = load_config.c, load_config.config
 
 # Given a field, return coarse observation
 def observe_coarse_field(Z, k):
@@ -52,18 +53,19 @@ def find_shell_area_fraction(df):
     return sizes, areas
 
 if __name__ == '__main__':
-    sizes, areas = [], []
+    r_, sizes, areas = [], [], []
     c1, c2 = [], []
 
     filename = f'{config["tracking"]}/clouds_00000121.pq'
     lc = find_lc.find_largest_clouds(filename)
-    cids = lc.index[5:60:5]
+    cids = lc.index[0:120:10]
 
     max_index = 6
     for i in range(max_index):
         df = pick_cid(cids[i], 0)
 
         s_, a_ = find_shell_area_fraction(df)
+        r_.append(np.sqrt(df.shape[0]/np.pi))
         sizes.append(s_)
         areas.append(a_)
 
@@ -99,9 +101,10 @@ if __name__ == '__main__':
         if i in [0, 3]:
             plt.ylabel(r'$\mathcal{A}_\mathrm{s}/\mathcal{A}$')
 
+        plt.title(rf'r $\approx$ {r_[i]*c.dx:.2f} [m]')
         plt.plot(sizes[i], areas[i], marker='o', c='k', lw=1.25)
 
-        m_ = (sizes[i] > 0.33)
+        m_ = (sizes[i] > 0.4)
 
         xi = np.linspace(min(sizes[i])-0.2, max(sizes[i])+0.2, 50)
         plt.plot(xi, c1[i][0]*xi+c1[i][1], '--', 
