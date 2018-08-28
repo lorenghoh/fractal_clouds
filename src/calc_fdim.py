@@ -17,12 +17,12 @@ def count_box(Z, k):
                            np.arange(0, Z.shape[1], k), axis=1)
 
     # We count non-empty (0) and non-full boxes (k*k)
-    return len(np.where((S > 0) & (S < k*k))[0])
+    return len(np.where((S > 0))[0])
 
 def calculate_fdim(df):
     x_width = max(df.x) - min(df.x)
     y_width = max(df.y) - min(df.y)
-    xy_map = np.zeros((y_width+4, x_width+4), dtype=int)
+    xy_map = np.zeros((y_width+3, x_width+3), dtype=int)
     xy_map[df.y, df.x] = 1
 
     # Leave only the perimeter of the cloud 
@@ -47,7 +47,7 @@ def calculate_fdim(df):
     counts = []
     for size in sizes:
         counts.append(count_box(xy_map, size))
-    sizes = sizes / r_
+    # sizes = sizes / r_
 
     # Fit the successive log(sizes) with log (counts)
     c = np.polyfit(np.log10(sizes), np.log10(counts), 1)
@@ -58,7 +58,7 @@ def calculate_fdim(df):
 if __name__ == '__main__':
     # Calculate fdim from a sample cloud 
     # Read cloud core projection image
-    df = pick_cid(41114, 4)
+    df = pick_cid(4167, 0)
     c, sizes, counts = calculate_fdim(df)
 
     #---- Plotting 
@@ -77,8 +77,8 @@ if __name__ == '__main__':
     plt.rc('font', family='Serif')
 
     ax = plt.subplot(1, 1, 1)
-    plt.xlabel(r'$\log_{10}$ $\eta$')
-    plt.ylabel(r'$\log_{10}$ N($\eta$)')
+    plt.xlabel(r'$\log_{10}$ $l$')
+    plt.ylabel(r'$\log_{10}$ N($l$)')
 
     plt.plot(np.log10(sizes), np.log10(counts), 
             ms=3, marker='o', lw=0.75)
