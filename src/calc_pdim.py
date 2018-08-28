@@ -35,7 +35,7 @@ def calc_perimeter(Z):
 if __name__ == '__main__':
     # Calculate fdim from a sample cloud 
     # Read horizontal slice from a cloud core
-    df = pick_cid(11281, 0)
+    df = pick_cid(4167, 0)
 
     x_width = max(df.x) - min(df.x)
     y_width = max(df.y) - min(df.y)
@@ -45,7 +45,7 @@ if __name__ == '__main__':
     # Scaling factor based on L/R
     # r_ = calc_radius.calculate_radial_distance(df)
     r_ = calc_radius.calculate_geometric_r(df)
-    sizes = np.arange(int(r_), 0, -1)
+    sizes = np.arange(int(r_/2), 0, -1)
 
     # Calculate perimeter and area
     area = np.sum(xy_map[xy_map > 0]) * c.dx**2
@@ -64,7 +64,7 @@ if __name__ == '__main__':
     # sizes = sizes / r_
 
     # Fit the successive log(sizes) with log (counts)
-    model = lm.RidgeCV(fit_intercept=True)
+    model = lm.BayesianRidge()
     X = np.log10(X_p)[:, None]
     model.fit (X, np.log10(Y_p))
 
@@ -84,10 +84,10 @@ if __name__ == '__main__':
     plt.rc('font', family='Serif')
 
     ax = plt.subplot(1, 1, 1)
-    plt.xlabel(r'$\log_{10}$ $L/R$')
-    plt.ylabel(r'$\log_{10}$ $P$')
+    plt.xlabel(r'$\log_{10}$ $l$')
+    plt.ylabel(r'$\log_{10}$ $P(l)$')
 
-    label = f"P $\propto$ (L/R)$^{{{model.coef_[0]:.3f}}}$"
+    label = f"$P(l)$ $\propto$ ($l$)$^{{{model.coef_[0]:.3f}}}$"
     plt.plot(np.log10(X_p), np.log10(Y_p), 
              marker='o', lw=0.75, label=label)
 
