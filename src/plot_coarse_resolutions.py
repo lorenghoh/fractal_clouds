@@ -17,7 +17,7 @@ if __name__ == '__main__':
     # Read horizontal slice from a cloud core
     f = f'{config["tracking"]}/clouds_00000121.pq'
     df = pq.read_pandas(f, nthreads=16).to_pandas()
-    df = df[(df.cid == 39520) & (df.type == 0)]
+    df = df[(df.cid == 11281) & (df.type == 0)]
 
     # Calculate z index from coordinates
     df['z'] = df.coord // (c.nx * c.ny)
