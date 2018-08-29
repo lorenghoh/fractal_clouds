@@ -69,12 +69,12 @@ def find_shell_area_fraction(df):
     return sizes, areas, area_
 
 if __name__ == '__main__':
-    for time in range(0, 540, 60):
+    for time in range(0, 540, 3):
         f = f'{config["tracking"]}/clouds_00000{time:03d}.pq'
         df = pq.read_pandas(f, nthreads=16).to_pandas()
 
         lc = find_lc.find_largest_clouds(f)
-        cids = lc.index[0:120]
+        cids = lc.index[0:80]
 
         # Translate indices to coordinates
         df['z'] = df.coord // (c.nx * c.ny)
@@ -109,7 +109,7 @@ if __name__ == '__main__':
     # df = pd.concat(result, ignore_index=True)
 
     #---- Plotting 
-    fig = plt.figure(1, figsize=(6, 6))
+    fig = plt.figure(1, figsize=(4, 4))
     fig.clf()
     sns.set_context('paper')
     sns.set_style('ticks', 
@@ -123,15 +123,20 @@ if __name__ == '__main__':
     plt.rc('text', usetex=True)
     plt.rc('font', family='Serif')
 
-    r = np.concatenate(r).ravel()
+    r = np.concatenate(r).ravel() * c.dx
     a = np.concatenate(a).ravel()
     area = np.concatenate(area).ravel() / 1e6
     m_ = (r > 0) & (a > 0)
 
-    sc = plt.scatter(r[m_], a[m_], c=area[m_])
-    plt.colorbar(sc)
+    cmap = sns.cubehelix_palette(start=.3, rot=-.4, as_cmap=True)
+    sc = plt.scatter(r[m_], a[m_], c=area[m_], s=8, cmap=cmap)
+    cb = plt.colorbar(sc, label=r'Area [km$^{-2}$]')
+
     # plt.xlim([0, 1.25])
-    plt.xlim([0, 25])
+    plt.xlim([0, 600])
+
+    plt.xlabel(r'$l$ [m]')
+    plt.ylabel(r'$\mathcal{A}_s/\mathcal{A}$')
 
     plt.tight_layout(pad=0.5)
     figfile = '../png/{}.png'.format(os.path.splitext(__file__)[0])
