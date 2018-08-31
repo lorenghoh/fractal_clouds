@@ -69,12 +69,13 @@ def find_shell_area_fraction(df):
     return sizes, areas, area_
 
 if __name__ == '__main__':
-    for time in range(0, 540, 3):
+    r, a, area = [], [], []
+    for time in range(0, 480, 12):
         f = f'{config["tracking"]}/clouds_00000{time:03d}.pq'
         df = pq.read_pandas(f, nthreads=16).to_pandas()
 
         lc = find_lc.find_largest_clouds(f)
-        cids = lc.index[0:80]
+        cids = lc.index[0:80:4]
 
         # Translate indices to coordinates
         df['z'] = df.coord // (c.nx * c.ny)
@@ -85,7 +86,6 @@ if __name__ == '__main__':
         # Take cloud regions and trim noise
         df = df[df.type == 0]
         group = df.groupby(['cid', 'z'], as_index=False)
-        r, a, area = [], [], []
         for cid in cids:
             grp = df[df.cid == cid]
         # for _, grp in group:
@@ -129,11 +129,11 @@ if __name__ == '__main__':
     m_ = (r > 0) & (a > 0)
 
     cmap = sns.cubehelix_palette(start=.3, rot=-.4, as_cmap=True)
-    sc = plt.scatter(r[m_], a[m_], c=area[m_], s=8, cmap=cmap)
-    cb = plt.colorbar(sc, label=r'Area [km$^{-2}$]')
+    sc = plt.scatter(r[m_], a[m_], c=area[m_], s=5, cmap=cmap)
+    cb = plt.colorbar(sc, label=r'Area [km$^2$]')
 
     # plt.xlim([0, 1.25])
-    plt.xlim([0, 600])
+    plt.xlim([0, 800])
 
     plt.xlabel(r'$l$ [m]')
     plt.ylabel(r'$\mathcal{A}_s/\mathcal{A}$')
