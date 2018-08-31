@@ -70,12 +70,12 @@ def find_shell_area_fraction(df):
 
 if __name__ == '__main__':
     r, a, area = [], [], []
-    for time in range(0, 480, 12):
+    for time in range(0, 540, 1):
         f = f'{config["tracking"]}/clouds_00000{time:03d}.pq'
         df = pq.read_pandas(f, nthreads=16).to_pandas()
 
         lc = find_lc.find_largest_clouds(f)
-        cids = lc.index[0:80:4]
+        cids = lc.index[0:128]
 
         # Translate indices to coordinates
         df['z'] = df.coord // (c.nx * c.ny)
@@ -109,7 +109,7 @@ if __name__ == '__main__':
     # df = pd.concat(result, ignore_index=True)
 
     #---- Plotting 
-    fig = plt.figure(1, figsize=(4, 4))
+    fig = plt.figure(1, figsize=(4.5, 4))
     fig.clf()
     sns.set_context('paper')
     sns.set_style('ticks', 
@@ -126,14 +126,35 @@ if __name__ == '__main__':
     r = np.concatenate(r).ravel() * c.dx
     a = np.concatenate(a).ravel()
     area = np.concatenate(area).ravel() / 1e6
-    m_ = (r > 0) & (a > 0)
+    m_ = (r > 0) & (r < 900) & (a > 0)
 
-    cmap = sns.cubehelix_palette(start=.3, rot=-.4, as_cmap=True)
-    sc = plt.scatter(r[m_], a[m_], c=area[m_], s=5, cmap=cmap)
+    # Scattergram
+    def hist_weight(H, w, x, y, xi, yi, bins=40):
+        W = np.zeros_like(H)
+        for i in range(bins):
+            for j in range(bins):
+                if np.isfinite(H[j, i]) & (H[j, i] > 0):
+                    _m = (x >= xi[i]) & (x <= xi[i+1])
+                    _m = _m & (y >= yi[j]) & (y <= yi[j+1])
+                    W[j, i] = np.nanmean(w[_m])
+        return W
+
+    cmap = sns.cubehelix_palette(start=1.2, hue=1, light=1, 
+                                 rot=-1.05, as_cmap=True)
+    H, xi, yi = np.histogram2d(r[m_], a[m_], bins=40)
+    H = H.T
+    H[H < 5] = 0
+    W = hist_weight(H, area[m_], r[m_], a[m_], xi, yi)
+
+    xii, yii = np.meshgrid(xi[1:], yi[1:])
+    sc = plt.scatter(xii, yii, s=15, c=W, cmap=cmap)
+
+    # cmap = sns.cubehelix_palette(start=.3, rot=-.4, as_cmap=True)
+    # sc = plt.scatter(r[m_], a[m_], c=area[m_], s=5, cmap=cmap)
     cb = plt.colorbar(sc, label=r'Area [km$^2$]')
 
     # plt.xlim([0, 1.25])
-    plt.xlim([0, 800])
+    plt.xlim([0, 900])
 
     plt.xlabel(r'$l$ [m]')
     plt.ylabel(r'$\mathcal{A}_s/\mathcal{A}$')
