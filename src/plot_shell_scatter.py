@@ -31,46 +31,47 @@ def observe_coarse_field(Z, k):
 def find_shell_area_fraction(df):
     x, y = df.x, df.y
     x_axis, y_axis = c.nx, c.ny
-    if (max(x) - min(x)) > x_axis // 2:
+    if (max(x) - min(x)) >= x_axis // 2:
         x_off = x_axis - np.min(x[(x > x_axis // 2)])
         
         # Shift x-coordinates
         x = x + x_off
         x[x >= x_axis] = x[x >= x_axis] - x_axis
 
-    if (max(y) - min(y)) > y_axis // 2:
+    if (max(y) - min(y)) >= y_axis // 2:
         y_off = y_axis - np.min(y[(y > y_axis // 2)])
 
         # Shift y-coordinates
         y = y + y_off
         y[y >= y_axis] = y[y >= y_axis] - y_axis
         
-    x_width = max(df.x) - min(df.x)
-    y_width = max(df.y) - min(df.y)
+    x_width = max(x) - min(x)
+    y_width = max(y) - min(y)
     xy_map = np.zeros((y_width+1, x_width+1), dtype=int)
     xy_map[y - min(y), x - min(x)] = 1
 
     # Radius estimates
     r_ = calc_radius.calculate_geometric_r(df)
-    sizes = np.arange(int(r_*2), 0, -1)
+    l_set = np.arange(int(r_*2), 0, -1)
 
     area = np.array(np.sum(xy_map) * c.dx**2)
     
-    areas = []
-    for k in sizes:
+    xs, ws = [], []
+    for k in l_set:
         C = c.dx * k
         Z = observe_coarse_field(xy_map, k)
-        areas.append(np.array(area - np.sum(Z)*C**2)/area)
+
+        xs.append((area - np.array(np.sum(Z)*C**2))/area)
+        ws.append(area / 1e6)
     
-    # sizes = np.array(sizes) / r_
-    if len(sizes) < 6:
-        return [0], [0]
-    area_ = np.ones(len(sizes)) * area
-    return sizes, areas, area_
+    ls = np.array(l_set) / r_
+    if len(ls) < 6:
+        return [0], [0], [0]
+    return ls, xs, ws
 
 if __name__ == '__main__':
-    r, a, area = [], [], []
-    for time in range(0, 540, 1):
+    r, a, w = [], [], []
+    for time in range(0, 540, 15):
         f = f'{config["tracking"]}/clouds_00000{time:03d}.pq'
         df = pq.read_pandas(f, nthreads=16).to_pandas()
 
@@ -85,28 +86,17 @@ if __name__ == '__main__':
 
         # Take cloud regions and trim noise
         df = df[df.type == 0]
-        group = df.groupby(['cid', 'z'], as_index=False)
         for cid in cids:
             grp = df[df.cid == cid]
-        # for _, grp in group:
             if grp.shape[0] < 6:
                 continue
             try:
-                r_, a_, area_ = find_shell_area_fraction(grp)
+                r_, a_, w_ = find_shell_area_fraction(grp)
             except:
                 continue
             r.append(r_)
             a.append(a_)
-            area.append(area_)
-    # def group_shell(df):
-    #     r_, a_ = find_shell_area_fraction(df)
-    #     return pd.DataFrame({'r_': r_,
-    #                          'a_': a_})
-
-    # with Parallel(n_jobs=16) as Pr:
-    #     result = Pr(delayed(group_shell)
-    #                 (grouped) for _, grouped in group)
-    # df = pd.concat(result, ignore_index=True)
+            w.append(w_)
 
     #---- Plotting 
     fig = plt.figure(1, figsize=(4.5, 4))
@@ -123,10 +113,10 @@ if __name__ == '__main__':
     plt.rc('text', usetex=True)
     plt.rc('font', family='Serif')
 
-    r = np.concatenate(r).ravel() * c.dx
+    r = np.concatenate(r).ravel()
     a = np.concatenate(a).ravel()
-    area = np.concatenate(area).ravel() / 1e6
-    m_ = (r > 0) & (r < 900) & (a > 0)
+    w = np.concatenate(w).ravel()
+    m_ = (r > 0) & (a > 0)
 
     # Scattergram
     def hist_weight(H, w, x, y, xi, yi, bins=40):
@@ -143,20 +133,15 @@ if __name__ == '__main__':
                                  rot=-1.05, as_cmap=True)
     H, xi, yi = np.histogram2d(r[m_], a[m_], bins=40)
     H = H.T
-    H[H < 5] = 0
-    W = hist_weight(H, area[m_], r[m_], a[m_], xi, yi)
+    H[H < 5] = np.nan
+    W = hist_weight(H, w[m_], r[m_], a[m_], xi, yi)
 
     xii, yii = np.meshgrid(xi[1:], yi[1:])
     sc = plt.scatter(xii, yii, s=15, c=W, cmap=cmap)
 
-    # cmap = sns.cubehelix_palette(start=.3, rot=-.4, as_cmap=True)
-    # sc = plt.scatter(r[m_], a[m_], c=area[m_], s=5, cmap=cmap)
     cb = plt.colorbar(sc, label=r'Area [km$^2$]')
 
-    # plt.xlim([0, 1.25])
-    plt.xlim([0, 900])
-
-    plt.xlabel(r'$l$ [m]')
+    plt.xlabel(r'$S(l)$')
     plt.ylabel(r'$\mathcal{A}_s/\mathcal{A}$')
 
     plt.tight_layout(pad=0.5)
