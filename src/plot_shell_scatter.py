@@ -47,7 +47,7 @@ def find_shell_area_fraction(df):
         
     x_width = max(x) - min(x)
     y_width = max(y) - min(y)
-    xy_map = np.zeros((y_width+1, x_width+1), dtype=int)
+    xy_map = np.zeros((y_width+4, x_width+4), dtype=int)
     xy_map[y - min(y), x - min(x)] = 1
 
     # Radius estimates
@@ -61,22 +61,23 @@ def find_shell_area_fraction(df):
         C = c.dx * k
         Z = observe_coarse_field(xy_map, k)
 
-        xs.append((area - np.array(np.sum(Z)*C**2))/area)
+        xs.append(np.array(np.sum(Z)*C**2) / area)
         ws.append(area / 1e6)
     
-    ls = np.array(l_set) / r_
+    ls = np.array(l_set) #/ r_
     if len(ls) < 6:
         return [0], [0], [0]
     return ls, xs, ws
 
 if __name__ == '__main__':
     r, a, w = [], [], []
-    for time in range(0, 540, 15):
+    df_ = pd.DataFrame()
+    for time in range(0, 540, 3):
         f = f'{config["tracking"]}/clouds_00000{time:03d}.pq'
         df = pq.read_pandas(f, nthreads=16).to_pandas()
 
         lc = find_lc.find_largest_clouds(f)
-        cids = lc.index[0:128]
+        cids = lc.index[:128]
 
         # Translate indices to coordinates
         df['z'] = df.coord // (c.nx * c.ny)
@@ -85,18 +86,18 @@ if __name__ == '__main__':
         df['x'] = xy % c.nx
 
         # Take cloud regions and trim noise
-        df = df[df.type == 0]
-        for cid in cids:
-            grp = df[df.cid == cid]
-            if grp.shape[0] < 6:
-                continue
-            try:
-                r_, a_, w_ = find_shell_area_fraction(grp)
-            except:
-                continue
-            r.append(r_)
-            a.append(a_)
-            w.append(w_)
+        df = df[df.cid.isin(cids) & (df.type == 0)]
+        group = df.groupby(['cid'])
+        def group_shell(df):
+            r_, a_, w_ = find_shell_area_fraction(df)
+            return pd.DataFrame({'r_': r_,
+                                 'a_': a_,
+                                 'w_': w_})
+
+        with Parallel(n_jobs=16) as Pr:
+            result = Pr(delayed(group_shell)(grouped) for _, grouped in group)
+            df_r = pd.concat(result, ignore_index=True)
+        df_ = pd.concat([df_, df_r], ignore_index=True)
 
     #---- Plotting 
     fig = plt.figure(1, figsize=(4.5, 4))
@@ -113,12 +114,10 @@ if __name__ == '__main__':
     plt.rc('text', usetex=True)
     plt.rc('font', family='Serif')
 
-    r = np.concatenate(r).ravel()
-    a = np.concatenate(a).ravel()
-    w = np.concatenate(w).ravel()
+    r, a, w = df_.r_, df_.a_, df_.w_
     m_ = (r > 0) & (a > 0)
 
-    # Scattergram
+    # Colorbar scheme used for Scattergram
     def hist_weight(H, w, x, y, xi, yi, bins=40):
         W = np.zeros_like(H)
         for i in range(bins):
@@ -140,6 +139,8 @@ if __name__ == '__main__':
     sc = plt.scatter(xii, yii, s=15, c=W, cmap=cmap)
 
     cb = plt.colorbar(sc, label=r'Area [km$^2$]')
+
+    # plt.xlim([0, 0.6])
 
     plt.xlabel(r'$S(l)$')
     plt.ylabel(r'$\mathcal{A}_s/\mathcal{A}$')
