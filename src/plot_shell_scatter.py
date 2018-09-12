@@ -61,18 +61,20 @@ def find_shell_area_fraction(df):
         C = c.dx * k
         Z = observe_coarse_field(xy_map, k)
 
-        xs.append(np.array(np.sum(Z)*C**2) / area)
+        xs.append(np.array(area - np.sum(Z)*C**2) / area)
         ws.append(area / 1e6)
     
-    ls = np.array(l_set) #/ r_
-    if len(ls) < 6:
-        return [0], [0], [0]
+    # ls = np.array(l_set) / r_
+    # Use filter for l
+    ls = np.array(l_set)
+    # if len(ls) < 6:
+    #     return [0], [0], [0]
     return ls, xs, ws
 
 if __name__ == '__main__':
     r, a, w = [], [], []
     df_ = pd.DataFrame()
-    for time in range(0, 540, 3):
+    for time in range(0, 540, 1):
         f = f'{config["tracking"]}/clouds_00000{time:03d}.pq'
         df = pq.read_pandas(f, nthreads=16).to_pandas()
 
@@ -87,7 +89,7 @@ if __name__ == '__main__':
 
         # Take cloud regions and trim noise
         df = df[df.cid.isin(cids) & (df.type == 0)]
-        group = df.groupby(['cid'])
+        group = df.groupby(['cid', 'z'])
         def group_shell(df):
             r_, a_, w_ = find_shell_area_fraction(df)
             return pd.DataFrame({'r_': r_,
@@ -115,10 +117,10 @@ if __name__ == '__main__':
     plt.rc('font', family='Serif')
 
     r, a, w = df_.r_, df_.a_, df_.w_
-    m_ = (r > 0) & (a > 0)
-
+    m_ = (r > 0) & (r < 32) & (a > 0)
+    
     # Colorbar scheme used for Scattergram
-    def hist_weight(H, w, x, y, xi, yi, bins=40):
+    def hist_weight(H, w, x, y, xi, yi, bins=len(np.unique(r[m_]))+5):
         W = np.zeros_like(H)
         for i in range(bins):
             for j in range(bins):
@@ -130,19 +132,20 @@ if __name__ == '__main__':
 
     cmap = sns.cubehelix_palette(start=1.2, hue=1, light=1, 
                                  rot=-1.05, as_cmap=True)
-    H, xi, yi = np.histogram2d(r[m_], a[m_], bins=40)
+    H, xi, yi = np.histogram2d(r[m_], a[m_], bins=len(np.unique(r[m_]))+5)
     H = H.T
-    H[H < 5] = np.nan
     W = hist_weight(H, w[m_], r[m_], a[m_], xi, yi)
 
     xii, yii = np.meshgrid(xi[1:], yi[1:])
+    print(xii[0])
     sc = plt.scatter(xii, yii, s=15, c=W, cmap=cmap)
 
     cb = plt.colorbar(sc, label=r'Area [km$^2$]')
+    
+    plt.xlim([0, 32])
+    plt.xticks(np.arange(0, 32, 4), np.arange(0, 32, 4) * c.dx)
 
-    # plt.xlim([0, 0.6])
-
-    plt.xlabel(r'$S(l)$')
+    plt.xlabel(r'$l$ [m]')
     plt.ylabel(r'$\mathcal{A}_s/\mathcal{A}$')
 
     plt.tight_layout(pad=0.5)
