@@ -61,7 +61,7 @@ def find_shell_area_fraction(df):
         C = c.dx * k
         Z = observe_coarse_field(xy_map, k)
 
-        xs.append(np.array(area - np.sum(Z)*C**2) / area)
+        xs.append(np.array(np.sum(Z)*C**2) / area)
         ws.append(area / 1e6)
     
     # ls = np.array(l_set) / r_
@@ -74,7 +74,7 @@ def find_shell_area_fraction(df):
 if __name__ == '__main__':
     r, a, w = [], [], []
     df_ = pd.DataFrame()
-    for time in range(0, 540, 1):
+    for time in range(0, 540, 30):
         f = f'{config["tracking"]}/clouds_00000{time:03d}.pq'
         df = pq.read_pandas(f, nthreads=16).to_pandas()
 
