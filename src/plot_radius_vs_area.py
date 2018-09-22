@@ -61,19 +61,14 @@ def find_shell_area_fraction(df):
     k = np.ceil(r_g * 0.4).astype(np.int_)
 
     if k < 3:
-        return 0, 0, 0
+        return 0, 0
 
-    Z = observe_coarse_field(xy_map, k)
-
-    core_area = np.sum(Z) * (k * c.dx)**2
-    shell_area = (area - core_area)
-
-    return core_area, shell_area, r_g
+    return r_d, r_g
 
 if __name__ == '__main__':
     r, a, w = [], [], []
     df_ = pd.DataFrame()
-    for time in range(0, 540, 30):
+    for time in range(0, 540, 5):
         f = f'{config["tracking"]}/clouds_00000{time:03d}.pq'
         df = pq.read_pandas(f, nthreads=16).to_pandas()
 
@@ -90,10 +85,9 @@ if __name__ == '__main__':
         df = df[df.cid.isin(cids) & (df.type == 0)]
         group = df.groupby(['cid', 'z'])
         def group_shell(df):
-            c_, s_, r_, = find_shell_area_fraction(df)
-            return pd.DataFrame({'core_area': [c_],
-                                 'shell_area': [s_],
-                                 'radius': [r_]})
+            r_d, r_g, = find_shell_area_fraction(df)
+            return pd.DataFrame({'r_d': [r_d],
+                                 'r_g': [r_g]})
 
         with Parallel(n_jobs=16) as Pr:
             result = Pr(delayed(group_shell)(grouped) for _, grouped in group)
@@ -115,22 +109,22 @@ if __name__ == '__main__':
     plt.rc('text', usetex=True)
     plt.rc('font', family='Serif')
 
-    c_area, s_area, r_ = df_.core_area, df_.shell_area, df_.radius
-    m_ = (c_area > 0) & (s_area > 0)
+    r_d, r_g = df_.r_d, df_.r_g
+    m_ = (r_d > 0) & (r_d < 15) & (r_g > 0) & (r_g < 15)
 
-    x = c_area[m_]
-    y = s_area[m_]
+    x = r_g[m_] * c.dx
+    y = r_d[m_] * c.dx
+    sns.kdeplot(x, y, shade=True, shade_lowest=False)
 
-    xy = np.vstack([x,y])
-    z = gaussian_kde(xy)(xy)
-    idx = z.argsort()
-    x, y, z = x[idx], y[idx], z[idx]
+    # Linear curve 
+    xi = np.linspace(75, 350, 400)
+    plt.plot(xi, xi, 'k-', zorder=9)
 
-    cax = plt.scatter(x, y, c=z, s=50, edgecolor='')
-    plt.colorbar(cax)
+    plt.xlim([75, 350])
+    plt.ylim([75, 350])
     
-    plt.xlabel(r'$l$ [m]')
-    plt.ylabel(r'$\mathcal{A}(l)/\mathcal{A}$')
+    plt.xlabel(r'Geometric Radius $r_g$ [m]')
+    plt.ylabel(r'Ave. Rad. Distance $r_d$ [m]')
 
     plt.tight_layout(pad=0.5)
     figfile = '../png/{}.png'.format(os.path.splitext(__file__)[0])
