@@ -59,11 +59,14 @@ def find_shell_area_fraction(df):
     # Assume core size of 0.4 R
     # Measure core / shell ratio
     k = np.ceil(r_g * 0.4).astype(np.int_)
+    Z = observe_coarse_field(xy_map, k)
+
+    core_area = np.sum(Z) * (k * c.dx)**2 / area
 
     if k < 3:
         return 0, 0
 
-    return r_d, r_g
+    return r_g, r_d
 
 if __name__ == '__main__':
     r, a, w = [], [], []
@@ -73,7 +76,7 @@ if __name__ == '__main__':
         df = pq.read_pandas(f, nthreads=16).to_pandas()
 
         lc = find_lc.find_largest_clouds(f)
-        cids = lc.index[:128]
+        cids = lc.index[:256]
 
         # Translate indices to coordinates
         df['z'] = df.coord // (c.nx * c.ny)
@@ -85,9 +88,9 @@ if __name__ == '__main__':
         df = df[df.cid.isin(cids) & (df.type == 0)]
         group = df.groupby(['cid', 'z'])
         def group_shell(df):
-            r_d, r_g, = find_shell_area_fraction(df)
-            return pd.DataFrame({'r_d': [r_d],
-                                 'r_g': [r_g]})
+            df_x, df_y, = find_shell_area_fraction(df)
+            return pd.DataFrame({'x': [df_x],
+                                 'y': [df_y]})
 
         with Parallel(n_jobs=16) as Pr:
             result = Pr(delayed(group_shell)(grouped) for _, grouped in group)
@@ -109,20 +112,21 @@ if __name__ == '__main__':
     plt.rc('text', usetex=True)
     plt.rc('font', family='Serif')
 
-    r_d, r_g = df_.r_d, df_.r_g
-    m_ = (r_d > 0) & (r_d < 15) & (r_g > 0) & (r_g < 15)
+    x, y = df_.x, df_.y
+    m_ = (x > 0) & (x < 15) & (y > 0) & (y < 15)
 
-    x = r_g[m_] * c.dx
-    y = r_d[m_] * c.dx
-    sns.kdeplot(x, y, shade=True, shade_lowest=False)
+    x = x[m_] * c.dx
+    y = y[m_] * c.dx
+    sns.kdeplot(x, y, shade=True, shade_lowest=False,
+                gridsize=80, n_levels=8)
 
-    # Linear curve 
+    # # Linear curve 
     xi = np.linspace(75, 350, 400)
     plt.plot(xi, xi, 'k-', zorder=9)
 
     plt.xlim([75, 350])
     plt.ylim([75, 350])
-    
+
     plt.xlabel(r'Geometric Radius $r_g$ [m]')
     plt.ylabel(r'Ave. Rad. Distance $r_d$ [m]')
 
