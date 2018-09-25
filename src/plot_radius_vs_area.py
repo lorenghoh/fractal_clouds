@@ -29,6 +29,10 @@ def observe_coarse_field(Z, k):
     S[S >= thold] = 1
     return S
 
+def calc_perimeter(Z):
+    return np.sum(Z[:, 1:] != Z[:, :-1]) + \
+           np.sum(Z[1:, :] != Z[:-1, :])
+
 def find_shell_area_fraction(df):
     x, y = df.x, df.y
     x_axis, y_axis = c.nx, c.ny
@@ -56,17 +60,17 @@ def find_shell_area_fraction(df):
     r_g = calc_radius.calculate_geometric_r(xy_map)
     area = np.array(np.sum(xy_map) * c.dx**2)
     
-    # Assume core size of 0.4 R
+    # Assume core size of 0.3 R
     # Measure core / shell ratio
-    k = np.ceil(r_g * 0.4).astype(np.int_)
+    k = np.ceil(r_g * 0.3).astype(np.int_)
     Z = observe_coarse_field(xy_map, k)
 
-    core_area = np.sum(Z) * (k * c.dx)**2 / area
-
+    shell_area = (area - np.sum(Z) * (k * c.dx)**2) / 1e6
+    perimeter = calc_perimeter(xy_map) * c.dx / 1e3
     if k < 3:
         return 0, 0
 
-    return r_g, r_d
+    return perimeter, shell_area
 
 if __name__ == '__main__':
     r, a, w = [], [], []
@@ -76,7 +80,7 @@ if __name__ == '__main__':
         df = pq.read_pandas(f, nthreads=16).to_pandas()
 
         lc = find_lc.find_largest_clouds(f)
-        cids = lc.index[:256]
+        cids = lc.index[:128]
 
         # Translate indices to coordinates
         df['z'] = df.coord // (c.nx * c.ny)
@@ -113,22 +117,19 @@ if __name__ == '__main__':
     plt.rc('font', family='Serif')
 
     x, y = df_.x, df_.y
-    m_ = (x > 0) & (x < 15) & (y > 0) & (y < 15)
+    m_ = (x > 0) & (y > 0)
 
-    x = x[m_] * c.dx
-    y = y[m_] * c.dx
-    sns.kdeplot(x, y, shade=True, shade_lowest=False,
-                gridsize=80, n_levels=8)
+    x = x[m_]
+    y = y[m_]
 
-    # # Linear curve 
-    xi = np.linspace(75, 350, 400)
-    plt.plot(xi, xi, 'k-', zorder=9)
+    cmap = sns.cubehelix_palette(start=1.2, hue=1, light=1, rot=-1.05, as_cmap=True)
+    H, xi, yi = np.histogram2d(x, y, bins=60)
+    im = plt.pcolormesh(xi, yi, np.log10(H.T), vmin=.1, vmax=3, cmap=cmap, \
+        alpha=.9, edgecolor='0.9', linewidths = (0,),)
+    plt.colorbar(label=r'$\log_{10}$ Frequency')
 
-    plt.xlim([75, 350])
-    plt.ylim([75, 350])
-
-    plt.xlabel(r'Geometric Radius $r_g$ [m]')
-    plt.ylabel(r'Ave. Rad. Distance $r_d$ [m]')
+    plt.xlabel(r'Cloud Perimeter $P$ [km]')
+    plt.ylabel(r'Shell Area $\mathcal{A}_s(l = 0.3 R)$ [km$^2$]')
 
     plt.tight_layout(pad=0.5)
     figfile = '../png/{}.png'.format(os.path.splitext(__file__)[0])
